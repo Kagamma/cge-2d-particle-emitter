@@ -2,7 +2,7 @@
 PROFILE Interchange
 
 Transform {
-  translation 300 240 0
+  translation 400 240 0
   scale 120 120 1
   children [
     Shape {
@@ -23,10 +23,10 @@ Transform {
         solid FALSE
         coord Coordinate {
           point [
-            -1.5 -0.4 0,
-            1.5 -0.4 0,
-            1.5 0.4 0,
-            -1.5 0.4 0,
+            -1.2 -0.4 0,
+            1.2 -0.4 0,
+            1.2 0.4 0,
+            -1.2 0.4 0,
           ]
         }
         texCoord TextureCoordinate {
@@ -66,7 +66,7 @@ Transform {
 }
 
 Transform {
-  translation 300 80 0
+  translation 400 80 0
   scale 120 120 1
   children [
     Shape {
@@ -101,7 +101,7 @@ Transform {
 }
 
 Transform {
-  translation 300 -80 0
+  translation 400 -80 0
   scale 120 120 1
   children [
     Shape {
@@ -136,7 +136,7 @@ Transform {
 }
 
 Transform {
-  translation 300 -240 0
+  translation 400 -240 0
   scale 120 120 1
   children [
     Shape {
@@ -167,6 +167,35 @@ Transform {
       }
     }  
   DEF TouchSpiral TouchSensor { }
+  ]
+}
+
+Transform {
+  translation 400 0 -1
+  scale 400 700 1
+  children [
+    Shape {
+      appearance Appearance {
+        material Material { 
+          transparency 0.9
+          diffuseColor 0 0 0 
+          specularColor 0 0 0          
+          ambientIntensity 0
+          emissiveColor 0.5 0.5 0.5
+        } 
+      }
+      geometry QuadSet {
+        solid FALSE
+        coord Coordinate {
+          point [
+            -0.5 -0.5 0,
+            0.5 -0.5 0,
+            0.5 0.5 0,
+            -0.5 0.5 0,
+          ]
+        }
+      }   
+    }  
   ]
 }
 

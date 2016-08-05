@@ -82,8 +82,9 @@ begin
   Window.Container.UIScaling := usFitReferenceSize;
 
   SceneManager := T2DSceneManager.Create(Application);
-  SceneManager.ProjectionAutoSize := true;
-  SceneManager.ProjectionHeight := 721;
+  SceneManager.ProjectionAutoSize := false;
+  SceneManager.ProjectionWidth := 1280;
+  SceneManager.ProjectionHeight := 720;
   SceneManager.ProjectionOriginCenter := true;
   Window.Controls.InsertFront(SceneManager);
 
