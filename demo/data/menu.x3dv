@@ -39,27 +39,30 @@ Transform {
         }
       }   
     }  
-    Transform {
-      translation 0 -0.1 0.01
-      children Shape {
-        appearance DEF text_apr Appearance {
-          material Material {             
-            diffuseColor 0 0 0 
-            specularColor 0 0 0          
-            ambientIntensity 0
-            emissiveColor 1 1 1
-          } 
-        }
-        geometry Text {
-          string [
-            "Fire"
-          ]
-          fontStyle FontStyle {
-            size 0.3
-            justify "MIDDLE"
+    Collision {
+      enabled FALSE
+      children Transform {
+        translation 0 -0.1 0.01
+        children Shape {
+          appearance DEF text_apr Appearance {
+            material Material {             
+              diffuseColor 0 0 0 
+              specularColor 0 0 0          
+              ambientIntensity 0
+              emissiveColor 1 1 1
+            } 
+          }
+          geometry Text {
+            string [
+              "Fire"
+            ]
+            fontStyle FontStyle {
+              size 0.3
+              justify "MIDDLE"
+            }
           }
         }
-      }
+      }  
     }  
   DEF TouchFire TouchSensor { }
   ]
@@ -81,21 +84,25 @@ Transform {
       }
       geometry USE btn_geo
     }  
-    Transform {
-      translation 0 -0.1 0.01
-      children Shape {
-        appearance USE text_apr
-        geometry Text {
-          string [
-            "Trippy"
-          ]
-          fontStyle FontStyle {
-            size 0.3
-            justify "MIDDLE"
+    Collision {
+      enabled FALSE 
+      children
+        Transform {
+          translation 0 -0.1 0.01
+          children Shape {
+          appearance USE text_apr
+          geometry Text {
+            string [
+              "Trippy"
+            ]
+            fontStyle FontStyle {
+              size 0.3
+              justify "MIDDLE"
+            }
           }
         }
-      }
-    }  
+      }  
+    }
   DEF TouchTrippy TouchSensor { }
   ]
 }
@@ -116,21 +123,25 @@ Transform {
       }
       geometry USE btn_geo 
     }  
-    Transform {
-      translation 0 -0.1 0.01
-      children Shape {
-        appearance USE text_apr
-        geometry Text {
-          string [
-            "JellyFish"
-          ]
-          fontStyle FontStyle {
-            size 0.3
-            justify "MIDDLE"
+    Collision {
+      enabled FALSE 
+      children
+        Transform {
+          translation 0 -0.1 0.01
+          children Shape {
+          appearance USE text_apr
+          geometry Text {
+            string [
+              "Jellyfish"
+            ]
+            fontStyle FontStyle {
+              size 0.3
+              justify "MIDDLE"
+            }
           }
         }
-      }
-    }  
+      }  
+    }
   DEF TouchJellyFish TouchSensor { }
   ]
 }
@@ -151,51 +162,26 @@ Transform {
       }
       geometry USE btn_geo
     }  
-    Transform {
-      translation 0 -0.1 0.01
-      children Shape {
-        appearance USE text_apr
-        geometry Text {
-          string [
-            "Spiral"
-          ]
-          fontStyle FontStyle {
-            size 0.3
-            justify "MIDDLE"
+    Collision {
+      enabled FALSE 
+      children
+        Transform {
+          translation 0 -0.1 0.01
+          children Shape {
+          appearance USE text_apr
+          geometry Text {
+            string [
+              "Spiral"
+            ]
+            fontStyle FontStyle {
+              size 0.3
+              justify "MIDDLE"
+            }
           }
         }
-      }
+      }  
     }  
   DEF TouchSpiral TouchSensor { }
-  ]
-}
-
-Transform {
-  translation 400 0 -1
-  scale 400 700 1
-  children [
-    Shape {
-      appearance Appearance {
-        material Material { 
-          transparency 0.9
-          diffuseColor 0 0 0 
-          specularColor 0 0 0          
-          ambientIntensity 0
-          emissiveColor 0.5 0.5 0.5
-        } 
-      }
-      geometry QuadSet {
-        solid FALSE
-        coord Coordinate {
-          point [
-            -0.5 -0.5 0,
-            0.5 -0.5 0,
-            0.5 0.5 0,
-            -0.5 0.5 0,
-          ]
-        }
-      }   
-    }  
   ]
 }
 
