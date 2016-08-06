@@ -230,11 +230,10 @@ end;
 procedure TCastle2DParticleEffect.Load(const AURL: String);
 var
   Doc: TXMLDocument;       
-  XV: TXPathVariable;
 
   function XPath(const AXPath: DOMString; const ADOMNode: TDOMNode): TXPathVariable;
   begin
-    EvaluateXPathExpression(AXPath, ADOMNode);
+    Result := EvaluateXPathExpression(AXPath, ADOMNode);
   end;
 
 begin
