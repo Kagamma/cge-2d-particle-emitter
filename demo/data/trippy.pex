@@ -2,7 +2,7 @@
     <yCoordFlipped value="1"></yCoordFlipped>
     <sourcePosition x="150.00" y="50.00"></sourcePosition>
     <sourcePositionVariance x="7.00" y="7.00"></sourcePositionVariance>
-    <speed value="98.00"></speed>
+    <speed value="98.00"></speed> 
     <speedVariance value="211.00"></speedVariance>
     <particleLifeSpan value="3.0000"></particleLifeSpan>
     <particleLifespanVariance value="5.0000"></particleLifespanVariance>
@@ -30,8 +30,8 @@
     <minRadiusVariance value="0.00"></minRadiusVariance>
     <rotatePerSecond value="0.00"></rotatePerSecond>
     <rotatePerSecondVariance value="360.00"></rotatePerSecondVariance>
-    <blendFuncSource value="1"></blendFuncSource>
-    <blendFuncDestination value="1"></blendFuncDestination>
+    <blendFuncSource value="770"></blendFuncSource>
+    <blendFuncDestination value="772"></blendFuncDestination>
     <rotationStart value="0.00"></rotationStart>
     <rotationStartVariance value="0.00"></rotationStartVariance>
     <rotationEnd value="0.00"></rotationEnd>
