@@ -9,7 +9,8 @@ uses
   Classes, SysUtils,
   Castle3D, CastleSceneCore, Castle2DSceneManager,
   CastleVectors, CastleGenericLists,
-  X3DFields, X3DTime, X3DNodes;
+  X3DNodes,
+  fgl;
 
 type
   TCastleEmitterType = (etGravity, etRadial);
@@ -37,6 +38,7 @@ type
     EmitRotationDelta: single;
   end;
   TCastle2DParticleList = specialize TGenericStructList<TCastle2DParticle>;
+  TCastle2DParticleBlendMap = specialize TFPGMap<integer, string>;
 
   { This class acts as a place holder for effects. }
   TCastle2DParticleEffect = class
@@ -74,7 +76,8 @@ type
     FRotatePerSecondVariance: single;
     { We currently ignore blending mode for now, as I dont know how CGE handles
       blending internally. }
-    FBlendMode: integer;
+    FBlendFuncSource,
+    FBlendFuncDestination: integer;
     FRotationStart,
     FRotationStartVariance,
     FRotationEnd,
@@ -118,9 +121,8 @@ type
     property MinRadiusVariance: single read FMinRadiusVariance write FMinRadiusVariance;
     property RotatePerSecond: single read FRotatePerSecond write FRotatePerSecond;
     property RotatePerSecondVariance: single read FRotatePerSecondVariance write FRotatePerSecondVariance;
-    { We currently ignore blending mode for now, as I dont know how CGE handles
-      blending internal. }
-    property BlendMode: integer read FBlendMode write FBlendMode;
+    property BlendFuncSource: integer read FBlendFuncSource write FBlendFuncSource;
+    property BlendFuncDestination: integer read FBlendFuncDestination write FBlendFuncDestination;
     property RotationStart: single read FRotationStart write FRotationStart;
     property RotationStartVariance: single read FRotationStartVariance write FRotationStartVariance;
     property RotationEnd: single read FRotationEnd write FRotationEnd;
@@ -135,6 +137,7 @@ type
     FColorNode: TColorRGBANode;
     FTexCoordNode: TTextureCoordinateNode;
     FImageTexNode: TImageTextureNode;
+    FBlendModeNode: TBlendModeNode;
     FParticleCount: integer;
     FParticleList: TCastle2DParticleList;
     { The value is in miliseconds. Set it to -1 for infinite emitting, 0 to
@@ -147,6 +150,7 @@ type
 
     function EmitParticle: boolean;
     procedure UpdateParticle(const P: PCastle2DParticle; ATimeStep: single);
+    procedure InitNodeTree;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -159,10 +163,9 @@ type
     procedure LoadPEX(const AEffect: TCastle2DParticleEffect;
         const AOwnEffect: Boolean = true); overload;
     procedure Update(const SecondsPassed: single; var RemoveMe: TRemoveType); override;
-    procedure InitNodeTree;
     { Refresh the particle according to the change from effect. Normally we dont
       need to explicitly call it unless we make changes in Effect's Texture,
-      Duration and MaxParticles. }
+      Duration, BlendFunc and/or MaxParticles. }
     procedure RefreshEffect;
 
     property Effect: TCastle2DParticleEffect read FEffect;
@@ -180,8 +183,11 @@ uses
 
 const
   TexCoordBatch: array [0..5] of TVector2Single =
-    ((0, 0), (1, 0), (1, 1),
-     (0, 0), (1, 1), (0, 1));
+    ((0, 1), (0, 0), (1, 0),
+     (0, 1), (1, 0), (1, 1));
+
+var
+  BlendMap: TCastle2DParticleBlendMap;
 
 procedure TCastle2DParticleEffect.Clone(var ATarget: TCastle2DParticleEffect);
 begin
@@ -218,9 +224,8 @@ begin
   ATarget.MinRadiusVariance := MinRadiusVariance;
   ATarget.RotatePerSecond := RotatePerSecond;
   ATarget.RotatePerSecondVariance := RotatePerSecondVariance;
-  { We currently ignore blending mode for now, as I dont know how CGE handle
-    blending internal. }
-  ATarget.BlendMode := BlendMode;
+  ATarget.BlendFuncSource := BlendFuncSource;                
+  ATarget.BlendFuncDestination := BlendFuncDestination;
   ATarget.RotationStart := RotationStart;
   ATarget.RotationStartVariance := RotationStartVariance;
   ATarget.RotationEnd := RotationEnd;
@@ -229,7 +234,7 @@ end;
 
 procedure TCastle2DParticleEffect.Load(const AURL: String);
 var
-  Doc: TXMLDocument;       
+  Doc: TXMLDocument;   
 
   function XPath(const AXPath: DOMString; const ADOMNode: TDOMNode): TXPathVariable;
   begin
@@ -326,7 +331,11 @@ begin
     FRotatePerSecond :=
         DegToRad(XPath('//rotatePerSecond/@value', Doc).AsNumber);
     FRotatePerSecondVariance :=
-        DegToRad(XPath('//rotatePerSecondVariance/@value', Doc).AsNumber);
+        DegToRad(XPath('//rotatePerSecondVariance/@value', Doc).AsNumber); 
+    FBlendFuncSource :=
+        Round(XPath('//blendFuncSource/@value', Doc).AsNumber);
+    FBlendFuncDestination :=
+        Round(XPath('//blendFuncDestination/@value', Doc).AsNumber);
     FRotationStart :=
         DegToRad(XPath('//rotationStart/@value', Doc).AsNumber);
     FRotationStartVariance :=
@@ -353,7 +362,6 @@ begin
   InitNodeTree;
   FParticleCount := 0;
   FParticleList := TCastle2DParticleList.Create;
-  FParticleList.Capacity := 128;
   FEmitParticleTime := 0;
   FReleaseWhenDone := false;
 end;
@@ -361,7 +369,7 @@ end;
 destructor TCastle2DParticleEmitter.Destroy;
 begin
   if Assigned(FEffect) then
-    FreeAndNil(FEffect);
+    FEffect.Free;
   FParticleList.Free;
   inherited;
 end;
@@ -438,8 +446,14 @@ begin
   P^.Size := StartSize;
   P^.SizeDelta := (FinishSize - StartSize) * InvLifeSpan;
 
-  P^.Color := FEffect.StartColor + FEffect.StartColorVariance * (Random * 2 - 1);
-  FinishColor := FEffect.FinishColor + FEffect.FinishColorVariance * (Random * 2 - 1);
+  P^.Color[0] := FEffect.StartColor[0] + FEffect.StartColorVariance[0] * (Random * 2 - 1);
+  P^.Color[1] := FEffect.StartColor[1] + FEffect.StartColorVariance[1] * (Random * 2 - 1);
+  P^.Color[2] := FEffect.StartColor[2] + FEffect.StartColorVariance[2] * (Random * 2 - 1);
+  P^.Color[3] := FEffect.StartColor[3] + FEffect.StartColorVariance[3] * (Random * 2 - 1);
+  FinishColor[0] := FEffect.FinishColor[0] + FEffect.FinishColorVariance[0] * (Random * 2 - 1);
+  FinishColor[1] := FEffect.FinishColor[1] + FEffect.FinishColorVariance[1] * (Random * 2 - 1);
+  FinishColor[2] := FEffect.FinishColor[2] + FEffect.FinishColorVariance[2] * (Random * 2 - 1);
+  FinishColor[3] := FEffect.FinishColor[3] + FEffect.FinishColorVariance[3] * (Random * 2 - 1);
   P^.ColorDelta := (FinishColor - P^.Color) * InvLifeSpan;
 
   P^.Rotation := FEffect.RotationStart + FEffect.RotationStartVariance * (Random * 2 - 1);
@@ -482,15 +496,15 @@ begin
         RadialX := DistanceX / DistanceScalar;     
         RadialY := DistanceY / DistanceScalar;
 
-        TangentialX := RadialX;
-        TangentialY := RadialY;
+        TangentialX := -RadialX;
+        TangentialY := -RadialY;
 
         tmp := TangentialX;
         TangentialX := -TangentialY * P^.TangentialAcceleration;
         TangentialY := tmp * P^.TangentialAcceleration;
 
         P^.Velocity[0] += (FEffect.Gravity[0] + RadialX - TangentialX) * ATimeStep;
-        P^.Velocity[1] -= (FEffect.Gravity[1] - RadialY + TangentialY) * ATimeStep;
+        P^.Velocity[1] -= (-FEffect.Gravity[1] - RadialY + TangentialY) * ATimeStep;
         P^.Position[0] += P^.Velocity[0] * ATimeStep;
         P^.Position[1] += P^.Velocity[1] * ATimeStep;
       end;
@@ -561,7 +575,7 @@ begin
   P := FParticleList.Ptr(0);
   for i:= 0 to FParticleCount-1 do
   begin
-    Rotation := -P^.Rotation;
+    Rotation := P^.Rotation;
     C := Cos(Rotation);
     S := Sin(Rotation);
     Add := (C + S) * P^.Size * 0.5;
@@ -585,7 +599,7 @@ begin
   RemoveMe := rtNone;
   if FReleaseWhenDone then
   begin
-    if FParticleCount = 0 then
+    if (FParticleCount = 0) and (FEmissionTime = 0) then
       RemoveMe := rtRemoveAndFree;
   end;
 end;
@@ -616,6 +630,9 @@ begin
   ShapeNode.Material.SpecularColor := Vector3Single(0, 0, 0);
   ShapeNode.Material.AmbientIntensity := 0;
   ShapeNode.Material.EmissiveColor := Vector3Single(1, 1, 1);
+
+  FBlendModeNode := TBlendModeNode.Create;
+  ShapeNode.Appearance.FdBlendMode.Value := FBlendModeNode;
 
   FImageTexNode := TImageTextureNode.Create;
   FImageTexNode.RepeatS := false;
@@ -650,7 +667,25 @@ begin
   FCoordNode.FdPoint.Items.Capacity := FEffect.MaxParticles * 6;
   FTexCoordNode.FdPoint.Items.Capacity := FEffect.MaxParticles * 6;
   FColorNode.FdColor.Items.Capacity := FEffect.MaxParticles * 6;
+  FBlendModeNode.FdSrcFactor.Send(BlendMap[FEffect.BlendFuncSource]);
+  FBlendModeNode.FdDestFactor.Send(BlendMap[FEffect.BlendFuncDestination]);
 end;
+
+initialization
+  BlendMap := TCastle2DParticleBlendMap.Create;
+  BlendMap[0] := 'zero';
+  BlendMap[1] := 'one';                       
+  BlendMap[768] := 'src_color';
+  BlendMap[769] := 'one_minus_src_color';
+  BlendMap[770] := 'src_alpha';
+  BlendMap[771] := 'one_minus_src_alpha';
+  BlendMap[772] := 'dst_alpha';
+  BlendMap[773] := 'one_minus_dst_alpha';
+  BlendMap[774] := 'dst_color';
+  BlendMap[775] := 'one_minus_dst_color';
+
+finalization
+  BlendMap.Free;
 
 end.
 
