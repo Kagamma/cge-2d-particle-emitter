@@ -149,10 +149,10 @@ type
     function EmitParticle: boolean;
     procedure UpdateParticle(const P: PCastle2DParticle; ATimeStep: single);
     procedure InitNodeTree;
-    procedure Update(const SecondsPassed: single; var RemoveMe: TRemoveType); override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure Update(const SecondsPassed: single; var RemoveMe: TRemoveType); override;
     { This method will free the current Effect if any, init a new FEffect and
       load settings from .PEX file. }
     procedure LoadPEX(const AURL: string); overload;
@@ -528,6 +528,8 @@ var
   P: PCastle2DParticle;
   i: integer;
 begin       
+  inherited;
+
   if FParticleList.Count = 0 then
     exit;
   CoordList := FCoordNode.FdPoint.Items;
