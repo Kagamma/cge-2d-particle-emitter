@@ -43,7 +43,7 @@ type
   { This class acts as a place holder for effects. }
   TCastle2DParticleEffect = class
   private
-    FTexture: String;
+    FTexture: string;
     FSourcePosition,
     FSourcePositionVariance: TVector2Single;
     FSpeed,
@@ -74,8 +74,6 @@ type
     FMinRadiusVariance,
     FRotatePerSecond,
     FRotatePerSecondVariance: single;
-    { We currently ignore blending mode for now, as I dont know how CGE handles
-      blending internally. }
     FBlendFuncSource,
     FBlendFuncDestination: integer;
     FRotationStart,
@@ -84,13 +82,13 @@ type
     FRotationEndVariance: single;
   public
     { Clone all attributes of this effect to another one. Good if we want to
-      load the effect from file just one and then apply it to other emitters
+      load the effect from file just once and then apply it to other emitters
       so all emitters have the same effect. }
     procedure Clone(var ATarget: TCastle2DParticleEffect);
     { Load particle attributes in .PEX format. }
-    procedure Load(const AURL: String);
+    procedure Load(const AURL: string);
 
-    property Texture: String read FTexture write FTexture;
+    property Texture: string read FTexture write FTexture;
     property SourcePosition: TVector2Single read FSourcePosition write FSourcePosition;
     property SourcePositionVariance: TVector2Single read FSourcePositionVariance write FSourcePositionVariance;
     property Speed: single read FSpeed write FSpeed;
@@ -151,19 +149,19 @@ type
     function EmitParticle: boolean;
     procedure UpdateParticle(const P: PCastle2DParticle; ATimeStep: single);
     procedure InitNodeTree;
+    procedure Update(const SecondsPassed: single; var RemoveMe: TRemoveType); override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     { This method will free the current Effect if any, init a new FEffect and
       load settings from .PEX file. }
-    procedure LoadPEX(const AURL: String); overload;
+    procedure LoadPEX(const AURL: string); overload;
     { If AOwnEffect = false we will remove old Effect and replace it with
       AEffect, otherwise we will clone AEffect attributes to Effect (auto-init
       if needed). }
     procedure LoadPEX(const AEffect: TCastle2DParticleEffect;
         const AOwnEffect: Boolean = true); overload;
-    procedure Update(const SecondsPassed: single; var RemoveMe: TRemoveType); override;
-    { Refresh the particle according to the change from effect. Normally we dont
+    { Refresh the emitter according to the change from effect. Normally we dont
       need to explicitly call it unless we make changes in Effect's Texture,
       Duration, BlendFunc and/or MaxParticles. }
     procedure RefreshEffect;
@@ -232,7 +230,7 @@ begin
   ATarget.RotationEndVariance := RotationEndVariance;
 end;
 
-procedure TCastle2DParticleEffect.Load(const AURL: String);
+procedure TCastle2DParticleEffect.Load(const AURL: string);
 var
   Doc: TXMLDocument;   
 
@@ -247,7 +245,7 @@ begin
     FTexture :=
         ExtractURIPath(AURL) + XPath('//texture/@name', Doc).AsText;
     { We ignored source position as we dont need it. The scene itself should
-      attach to a T3DTransform for position. }
+      attach to a T3DTransform for positioning. }
     FSourcePosition := Vector2Single(
         //XPath('//sourcePosition/@x', Doc).AsNumber,
         //XPath('//sourcePosition/@y', Doc).AsNumber
@@ -374,7 +372,7 @@ begin
   inherited;
 end;
 
-procedure TCastle2DParticleEmitter.LoadPEX(const AURL: String);
+procedure TCastle2DParticleEmitter.LoadPEX(const AURL: string);
 begin
   if Assigned(FEffect) then
     FreeAndNil(FEffect);
