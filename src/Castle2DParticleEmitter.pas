@@ -232,7 +232,8 @@ end;
 
 procedure TCastle2DParticleEffect.Load(const AURL: string);
 var
-  Doc: TXMLDocument;   
+  Doc: TXMLDocument;
+  Stream: TStream;
 
   function XPath(const AXPath: DOMString; const ADOMNode: TDOMNode): TXPathVariable;
   begin
@@ -241,7 +242,8 @@ var
 
 begin
   try
-    ReadXMLFile(Doc, Download(AURL));
+    Stream := Download(AURL);
+    ReadXMLFile(Doc, Stream);
     FTexture :=
         ExtractURIPath(AURL) + XPath('//texture/@name', Doc).AsText;
     { We ignored source position as we dont need it. The scene itself should
@@ -344,6 +346,7 @@ begin
         DegToRad(XPath('//rotationEndVariance/@value', Doc).AsNumber);
   finally
     FreeAndNil(Doc);
+    FreeAndNil(Stream);
   end;
 end;
 
