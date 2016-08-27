@@ -239,13 +239,29 @@ var
   begin
     Result := EvaluateXPathExpression(AXPath, ADOMNode);
   end;
+  function XPathAsNumber(const AXPath: DOMString; const ADOMNode: TDOMNode): Extended;
+  var
+    variable: TXPathVariable;
+  begin
+    variable := XPath(AXPath, ADOMNode);
+    Result := variable.AsNumber;
+    variable.Free;
+  end;
+  function XPathAsText(const AXPath: DOMString; const ADOMNode: TDOMNode): string;
+  var
+    variable: TXPathVariable;
+  begin
+    variable := XPath(AXPath, ADOMNode);
+    Result := string(variable.AsText);
+    variable.Free;
+  end;
 
 begin
   try
     Stream := Download(AURL);
     ReadXMLFile(Doc, Stream);
     FTexture :=
-        ExtractURIPath(AURL) + XPath('//texture/@name', Doc).AsText;
+        ExtractURIPath(AURL) + XPathAsText('//texture/@name', Doc);
     { We ignored source position as we dont need it. The scene itself should
       attach to a T3DTransform for positioning. }
     FSourcePosition := Vector2Single(
@@ -254,96 +270,96 @@ begin
         0, 0
     );
     FSourcePositionVariance := Vector2Single(
-        XPath('//sourcePositionVariance/@x', Doc).AsNumber,
-        XPath('//sourcePositionVariance/@y', Doc).AsNumber
+        XPathAsNumber('//sourcePositionVariance/@x', Doc),
+        XPathAsNumber('//sourcePositionVariance/@y', Doc)
     );
     FSpeed :=
-        XPath('//speed/@value', Doc).AsNumber;
+        XPathAsNumber('//speed/@value', Doc);
     FSpeedVariance :=
-        XPath('//speedVariance/@value', Doc).AsNumber;
+        XPathAsNumber('//speedVariance/@value', Doc);
     FParticleLifeSpan :=
-        XPath('//particleLifeSpan/@value', Doc).AsNumber;
+        XPathAsNumber('//particleLifeSpan/@value', Doc);
     FParticleLifeSpanVariance :=
-        XPath('//particleLifespanVariance/@value', Doc).AsNumber;
+        XPathAsNumber('//particleLifespanVariance/@value', Doc);
     FAngle :=
-        DegToRad(XPath('//angle/@value', Doc).AsNumber);
+        DegToRad(XPathAsNumber('//angle/@value', Doc));
     FAngleVariance :=
-        DegToRad(XPath('//angleVariance/@value', Doc).AsNumber);
+        DegToRad(XPathAsNumber('//angleVariance/@value', Doc));
     FGravity := Vector2Single(
-        XPath('//gravity/@x', Doc).AsNumber,
-        XPath('//gravity/@y', Doc).AsNumber
+        XPathAsNumber('//gravity/@x', Doc),
+        XPathAsNumber('//gravity/@y', Doc)
     );          
     FRadialAcceleration :=
-        XPath('//radialAcceleration/@value', Doc).AsNumber;
+        XPathAsNumber('//radialAcceleration/@value', Doc);
     FRadialAccelVariance :=
-        XPath('//radialAccelVariance/@value', Doc).AsNumber;
+        XPathAsNumber('//radialAccelVariance/@value', Doc);
     FTangentialAcceleration :=
-        XPath('//tangentialAcceleration/@value', Doc).AsNumber;
+        XPathAsNumber('//tangentialAcceleration/@value', Doc);
     FTangentialAccelVariance :=
-        XPath('//tangentialAccelVariance/@value', Doc).AsNumber;
+        XPathAsNumber('//tangentialAccelVariance/@value', Doc);
     FStartColor := Vector4Single(
-        XPath('//startColor/@red', Doc).AsNumber,
-        XPath('//startColor/@green', Doc).AsNumber,
-        XPath('//startColor/@blue', Doc).AsNumber,
-        XPath('//startColor/@alpha', Doc).AsNumber
+        XPathAsNumber('//startColor/@red', Doc),
+        XPathAsNumber('//startColor/@green', Doc),
+        XPathAsNumber('//startColor/@blue', Doc),
+        XPathAsNumber('//startColor/@alpha', Doc)
     );                                         
     FStartColorVariance := Vector4Single(
-        XPath('//startColorVariance/@red', Doc).AsNumber,
-        XPath('//startColorVariance/@green', Doc).AsNumber,
-        XPath('//startColorVariance/@blue', Doc).AsNumber,
-        XPath('//startColorVariance/@alpha', Doc).AsNumber
+        XPathAsNumber('//startColorVariance/@red', Doc),
+        XPathAsNumber('//startColorVariance/@green', Doc),
+        XPathAsNumber('//startColorVariance/@blue', Doc),
+        XPathAsNumber('//startColorVariance/@alpha', Doc)
     );
     FFinishColor := Vector4Single(
-        XPath('//finishColor/@red', Doc).AsNumber,
-        XPath('//finishColor/@green', Doc).AsNumber,
-        XPath('//finishColor/@blue', Doc).AsNumber,
-        XPath('//finishColor/@alpha', Doc).AsNumber
+        XPathAsNumber('//finishColor/@red', Doc),
+        XPathAsNumber('//finishColor/@green', Doc),
+        XPathAsNumber('//finishColor/@blue', Doc),
+        XPathAsNumber('//finishColor/@alpha', Doc)
     );
     FFinishColorVariance := Vector4Single(
-        XPath('//finishColorVariance/@red', Doc).AsNumber,
-        XPath('//finishColorVariance/@green', Doc).AsNumber,
-        XPath('//finishColorVariance/@blue', Doc).AsNumber,
-        XPath('//finishColorVariance/@alpha', Doc).AsNumber
+        XPathAsNumber('//finishColorVariance/@red', Doc),
+        XPathAsNumber('//finishColorVariance/@green', Doc),
+        XPathAsNumber('//finishColorVariance/@blue', Doc),
+        XPathAsNumber('//finishColorVariance/@alpha', Doc)
     );         
     FMaxParticles :=
-        Round(XPath('//maxParticles/@value', Doc).AsNumber); 
+        Round(XPathAsNumber('//maxParticles/@value', Doc));
     FStartParticleSize :=
-        XPath('//startParticleSize/@value', Doc).AsNumber;
+        XPathAsNumber('//startParticleSize/@value', Doc);
     FStartParticleSizeVariance :=
-        XPath('//startParticleSizeVariance/@value', Doc).AsNumber; 
+        XPathAsNumber('//startParticleSizeVariance/@value', Doc);
     FFinishParticleSize :=
-        XPath('//finishParticleSize/@value', Doc).AsNumber; 
+        XPathAsNumber('//finishParticleSize/@value', Doc);
     { Fix for onebyonedesign's particle editor. }
     FFinishParticleSizeVariance :=
-        XPath('//finishParticleSizeVariance/@value | //FinishParticleSizeVariance/@value', Doc).AsNumber;
+        XPathAsNumber('//finishParticleSizeVariance/@value | //FinishParticleSizeVariance/@value', Doc);
     FDuration :=
-        XPath('//duration/@value', Doc).AsNumber;  
+        XPathAsNumber('//duration/@value', Doc);
     FEmitterType :=
-        TCastleEmitterType(Round(XPath('//emitterType/@value', Doc).AsNumber));
+        TCastleEmitterType(Round(XPathAsNumber('//emitterType/@value', Doc)));
     FMaxRadius :=
-        XPath('//maxRadius/@value', Doc).AsNumber;
+        XPathAsNumber('//maxRadius/@value', Doc);
     FMaxRadiusVariance :=
-        XPath('//maxRadiusVariance/@value', Doc).AsNumber;
+        XPathAsNumber('//maxRadiusVariance/@value', Doc);
     FMinRadius :=
-        XPath('//minRadius/@value', Doc).AsNumber;
+        XPathAsNumber('//minRadius/@value', Doc);
     FMinRadiusVariance :=
-        XPath('//minRadiusVariance/@value', Doc).AsNumber;  
+        XPathAsNumber('//minRadiusVariance/@value', Doc);
     FRotatePerSecond :=
-        DegToRad(XPath('//rotatePerSecond/@value', Doc).AsNumber);
+        DegToRad(XPathAsNumber('//rotatePerSecond/@value', Doc));
     FRotatePerSecondVariance :=
-        DegToRad(XPath('//rotatePerSecondVariance/@value', Doc).AsNumber); 
+        DegToRad(XPathAsNumber('//rotatePerSecondVariance/@value', Doc));
     FBlendFuncSource :=
-        Round(XPath('//blendFuncSource/@value', Doc).AsNumber);
+        Round(XPathAsNumber('//blendFuncSource/@value', Doc));
     FBlendFuncDestination :=
-        Round(XPath('//blendFuncDestination/@value', Doc).AsNumber);
+        Round(XPathAsNumber('//blendFuncDestination/@value', Doc));
     FRotationStart :=
-        DegToRad(XPath('//rotationStart/@value', Doc).AsNumber);
+        DegToRad(XPathAsNumber('//rotationStart/@value', Doc));
     FRotationStartVariance :=
-        DegToRad(XPath('//rotationStartVariance/@value', Doc).AsNumber);
+        DegToRad(XPathAsNumber('//rotationStartVariance/@value', Doc));
     FRotationEnd :=
-        DegToRad(XPath('//rotationEnd/@value', Doc).AsNumber);
+        DegToRad(XPathAsNumber('//rotationEnd/@value', Doc));
     FRotationEndVariance :=
-        DegToRad(XPath('//rotationEndVariance/@value', Doc).AsNumber);
+        DegToRad(XPathAsNumber('//rotationEndVariance/@value', Doc));
   finally
     FreeAndNil(Doc);
     FreeAndNil(Stream);
