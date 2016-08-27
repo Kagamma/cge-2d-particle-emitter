@@ -546,6 +546,7 @@ var
   ColorList: TVector4SingleList;
   P: PCastle2DParticle;
   i: integer;
+  ParticleLifeSpan: single;
 begin       
   inherited;
 
@@ -579,7 +580,11 @@ begin
 
   if (FEmissionTime > 0) or (FEmissionTime = -1) then
   begin
-    TimeBetweenParticles := FEffect.ParticleLifeSpan / FParticleList.Count;
+    ParticleLifeSpan := FEffect.ParticleLifeSpan;
+    if ParticleLifeSpan = 0.0 then
+      // Avoid endless loop when particleLifeSpan = 0
+      ParticleLifeSpan := 0.001;
+    TimeBetweenParticles := ParticleLifeSpan / FParticleList.Count;
     FEmitParticleTime += SecondsPassed;
     while FEmitParticleTime > 0 do
     begin
