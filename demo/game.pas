@@ -15,7 +15,8 @@ implementation
 uses
   SysUtils, CastleWindow, CastleScene, CastleControls,
   CastleFilesUtils, CastleSceneCore, CastleKeysMouse, CastleColors,
-  Castle2DSceneManager, CastleUIControls, Castle3D, CastleVectors,
+  Castle2DSceneManager, CastleUIControls,
+  Castle3D, CastleVectors, CastleTransform,
   X3DTime, X3DFields,
   Castle2DParticleEmitter;
 
@@ -28,7 +29,7 @@ var
   EffectTrippy,
   EffectJellyFish,
   EffectSpiral: TCastle2DParticleEffect;
-  T: T3DTransform;
+  T: TCastleTransform;
 
 type
   TScriptHelper = class
@@ -107,9 +108,9 @@ begin
   EffectJellyFish.Load(ApplicationData('jellyfish.pex'));
   EffectSpiral.Load(ApplicationData('spiral.pex'));
 
-  T := T3DTransform.Create(SceneManager);
-  T.Translation := Vector3Single(-213, 0, 0);
-  T.Scale := Vector3Single(1, -1, 1);
+  T := TCastleTransform.Create(SceneManager);
+  T.Translation := Vector3(-213, 0, 0);
+  T.Scale := Vector3(1, -1, 1);
   Emitter := TCastle2DParticleEmitter.Create(T);
   Emitter.LoadPEX(EffectFire, false);
   T.Add(Emitter);
@@ -120,7 +121,7 @@ end;
 procedure WindowRender(Container: TUIContainer);
 begin
   UIFont.Print(10, 40, Yellow, Format('Particle count: %d', [Emitter.ParticleCount]));
-  UIFont.Print(10, 10, Yellow, Format('FPS: %f', [Container.Fps.RealTime]));
+  UIFont.Print(10, 10, Yellow, Format('FPS: %f', [Container.Fps.RealFps]));
 end;
 
 procedure WindowUpdate(Container: TUIContainer);
