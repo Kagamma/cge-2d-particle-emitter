@@ -19,16 +19,16 @@ type
   PCastle2DParticle = ^TCastle2DParticle;
   TCastle2DParticle = record
     TimeToLive: single;
-    Position: TVector2Single;
+    Position: TVector2;
     Size,
     SizeDelta,
     Rotation,
     RotationDelta: single;
     Color,
-    ColorDelta: TVector4Single;
+    ColorDelta: TVector4;
     { Gravity parameters }
     StartPos,
-    Velocity: TVector2Single;
+    Velocity: TVector2;
     RadialAcceleration,
     TangentialAcceleration: single;
     { Radial parameters }
@@ -45,14 +45,14 @@ type
   private
     FTexture: string;
     FSourcePosition,
-    FSourcePositionVariance: TVector2Single;
+    FSourcePositionVariance: TVector2;
     FSpeed,
     FSpeedVariance,
     FParticleLifeSpan,
     FParticleLifeSpanVariance,
     FAngle,
     FAngleVariance: single;
-    FGravity: TVector2Single;
+    FGravity: TVector2;
     FRadialAcceleration,
     FTangentialAcceleration,
     FRadialAccelVariance,
@@ -60,7 +60,7 @@ type
     FStartColor,
     FStartColorVariance,
     FFinishColor,
-    FFinishColorVariance: TVector4Single;
+    FFinishColorVariance: TVector4;
     FMaxParticles: integer;
     FStartParticleSize,
     FStartParticleSizeVariance,
@@ -89,23 +89,23 @@ type
     procedure Load(const AURL: string);
 
     property Texture: string read FTexture write FTexture;
-    property SourcePosition: TVector2Single read FSourcePosition write FSourcePosition;
-    property SourcePositionVariance: TVector2Single read FSourcePositionVariance write FSourcePositionVariance;
+    property SourcePosition: TVector2 read FSourcePosition write FSourcePosition;
+    property SourcePositionVariance: TVector2 read FSourcePositionVariance write FSourcePositionVariance;
     property Speed: single read FSpeed write FSpeed;
     property SpeedVariance: single read FSpeedVariance write FSpeedVariance;
     property ParticleLifeSpan: single read FParticleLifeSpan write FParticleLifeSpan;
     property ParticleLifeSpanVariance: single read FParticleLifeSpanVariance write FParticleLifeSpanVariance;
     property Angle: single read FAngle write FAngle;
     property AngleVariance: single read FAngleVariance write FAngleVariance;
-    property Gravity: TVector2Single read FGravity write FGravity;
+    property Gravity: TVector2 read FGravity write FGravity;
     property RadialAcceleration: single read FRadialAcceleration write FRadialAcceleration;
     property TangentialAcceleration: single read FTangentialAcceleration write FTangentialAcceleration;
     property RadialAccelVariance: single read FRadialAccelVariance write FRadialAccelVariance;
     property TangentialAccelVariance: single read FTangentialAccelVariance write FTangentialAccelVariance;
-    property StartColor: TVector4Single read FStartColor write FStartColor;
-    property StartColorVariance: TVector4Single read FStartColorVariance write FStartColorVariance;
-    property FinishColor: TVector4Single read FFinishColor write FFinishColor;
-    property FinishColorVariance: TVector4Single read FFinishColorVariance write FFinishColorVariance;
+    property StartColor: TVector4 read FStartColor write FStartColor;
+    property StartColorVariance: TVector4 read FStartColorVariance write FStartColorVariance;
+    property FinishColor: TVector4 read FFinishColor write FFinishColor;
+    property FinishColorVariance: TVector4 read FFinishColorVariance write FFinishColorVariance;
     property MaxParticles: integer read FMaxParticles write FMaxParticles;
     property StartParticleSize: single read FStartParticleSize write FStartParticleSize;
     property StartParticleSizeVariance: single read FStartParticleSizeVariance write FStartParticleSizeVariance;
@@ -180,9 +180,9 @@ uses
   CastleDownload, CastleURIUtils;
 
 const
-  TexCoordBatch: array [0..5] of TVector2Single =
-    ((0, 1), (0, 0), (1, 0),
-     (0, 1), (1, 0), (1, 1));
+  TexCoordBatch: array [0..5] of TVector2 =
+    ((Data: (0, 1)), (Data: (0, 0)), (Data: (1, 0)),
+     (Data: (0, 1)), (Data: (1, 0)), (Data: (1, 1)));
 
 var
   BlendMap: TCastle2DParticleBlendMap;
@@ -264,12 +264,12 @@ begin
         ExtractURIPath(AURL) + XPathAsText('//texture/@name', Doc);
     { We ignored source position as we dont need it. The scene itself should
       attach to a T3DTransform for positioning. }
-    FSourcePosition := Vector2Single(
+    FSourcePosition := Vector2(
         //XPath('//sourcePosition/@x', Doc).AsNumber,
         //XPath('//sourcePosition/@y', Doc).AsNumber
         0, 0
     );
-    FSourcePositionVariance := Vector2Single(
+    FSourcePositionVariance := Vector2(
         XPathAsNumber('//sourcePositionVariance/@x', Doc),
         XPathAsNumber('//sourcePositionVariance/@y', Doc)
     );
@@ -285,7 +285,7 @@ begin
         DegToRad(XPathAsNumber('//angle/@value', Doc));
     FAngleVariance :=
         DegToRad(XPathAsNumber('//angleVariance/@value', Doc));
-    FGravity := Vector2Single(
+    FGravity := Vector2(
         XPathAsNumber('//gravity/@x', Doc),
         XPathAsNumber('//gravity/@y', Doc)
     );          
@@ -297,25 +297,25 @@ begin
         XPathAsNumber('//tangentialAcceleration/@value', Doc);
     FTangentialAccelVariance :=
         XPathAsNumber('//tangentialAccelVariance/@value', Doc);
-    FStartColor := Vector4Single(
+    FStartColor := Vector4(
         XPathAsNumber('//startColor/@red', Doc),
         XPathAsNumber('//startColor/@green', Doc),
         XPathAsNumber('//startColor/@blue', Doc),
         XPathAsNumber('//startColor/@alpha', Doc)
     );                                         
-    FStartColorVariance := Vector4Single(
+    FStartColorVariance := Vector4(
         XPathAsNumber('//startColorVariance/@red', Doc),
         XPathAsNumber('//startColorVariance/@green', Doc),
         XPathAsNumber('//startColorVariance/@blue', Doc),
         XPathAsNumber('//startColorVariance/@alpha', Doc)
     );
-    FFinishColor := Vector4Single(
+    FFinishColor := Vector4(
         XPathAsNumber('//finishColor/@red', Doc),
         XPathAsNumber('//finishColor/@green', Doc),
         XPathAsNumber('//finishColor/@blue', Doc),
         XPathAsNumber('//finishColor/@alpha', Doc)
     );
-    FFinishColorVariance := Vector4Single(
+    FFinishColorVariance := Vector4(
         XPathAsNumber('//finishColorVariance/@red', Doc),
         XPathAsNumber('//finishColorVariance/@green', Doc),
         XPathAsNumber('//finishColorVariance/@blue', Doc),
@@ -416,6 +416,7 @@ end;
 
 function TCastle2DParticleEmitter.EmitParticle: boolean;
 var
+  S, C,
   LifeSpan,
   InvLifeSpan,
   Speed,
@@ -425,7 +426,7 @@ var
   StartSize,
   FinishSize,
   EndRotation: single;
-  FinishColor: TVector4Single;
+  FinishColor: TVector4;
   P: PCastle2DParticle;
 begin
   if FParticleCount >= FEffect.MaxParticles then
@@ -444,8 +445,9 @@ begin
       FEffect.SourcePosition[1] + FEffect.SourcePositionVariance[1] * (Random * 2 - 1);
 
   Speed := FEffect.Speed + FEffect.SpeedVariance * (Random * 2 - 1);
-  Angle := FEffect.Angle + FEffect.AngleVariance * (Random * 2 - 1);
-  P^.Velocity := Vector2Single(Speed * Cos(Angle), Speed * Sin(Angle));
+  Angle := FEffect.Angle + FEffect.AngleVariance * (Random * 2 - 1);  
+  SinCos(Angle, S, C);
+  P^.Velocity := Vector2(Speed * C, Speed * S);
 
   MaxRadius := Max(0, FEffect.MaxRadius + FEffect.MaxRadiusVariance * (Random * 2 - 1));
   MinRadius := Max(0, FEffect.MinRadius + FEffect.MinRadiusVariance * (Random * 2 - 1));
@@ -506,7 +508,7 @@ begin
       begin
         DistanceX := P^.Position[0] - P^.StartPos[0];    
         DistanceY := P^.Position[1] - P^.StartPos[1];
-        DistanceScalar := VectorLen(Vector2Single(DistanceX, DistanceY));
+        DistanceScalar := Vector2(DistanceX, DistanceY).Length;
         if DistanceScalar < 0.0001 then
           DistanceScalar := 0.0001;
 
@@ -520,10 +522,10 @@ begin
         TangentialX := -TangentialY * P^.TangentialAcceleration;
         TangentialY := tmp * P^.TangentialAcceleration;
 
-        P^.Velocity[0] += (FEffect.Gravity[0] + RadialX - TangentialX) * ATimeStep;
-        P^.Velocity[1] -= (-FEffect.Gravity[1] - RadialY + TangentialY) * ATimeStep;
-        P^.Position[0] += P^.Velocity[0] * ATimeStep;
-        P^.Position[1] += P^.Velocity[1] * ATimeStep;
+        P^.Velocity[0] := P^.Velocity[0] + (FEffect.Gravity[0] + RadialX - TangentialX) * ATimeStep;
+        P^.Velocity[1] := P^.Velocity[1] - (-FEffect.Gravity[1] - RadialY + TangentialY) * ATimeStep;
+        P^.Position[0] := P^.Position[0] + P^.Velocity[0] * ATimeStep;
+        P^.Position[1] := P^.Position[1] + P^.Velocity[1] * ATimeStep;
       end;
   end;
   P^.Size += P^.SizeDelta * ATimeStep;
@@ -533,17 +535,17 @@ end;
 
 procedure TCastle2DParticleEmitter.Update(const SecondsPassed: single; var RemoveMe: TRemoveType);
 var
-  Rotation,
+  Rot,
   C,
   S,
-  Add,
-  Sub,
+  SAdd,
+  SSub,
   TimeBetweenParticles: single;
-  V1, V2, V3, V4: TVector3Single;
-  Col: TVector4Single;
-  CoordList: TVector3SingleList;
-  TexCoordList: TVector2SingleList;
-  ColorList: TVector4SingleList;
+  V1, V2, V3, V4: TVector3;
+  Col: TVector4;
+  CoordList: TVector3List;
+  TexCoordList: TVector2List;
+  ColorList: TVector4List;
   P: PCastle2DParticle;
   i: integer;
   ParticleLifeSpan: single;
@@ -599,19 +601,18 @@ begin
   P := FParticleList.Ptr(0);
   for i:= 0 to FParticleCount-1 do
   begin
-    Rotation := P^.Rotation;
-    C := Cos(Rotation);
-    S := Sin(Rotation);
-    Add := (C + S) * P^.Size * 0.5;
-    Sub := (C - S) * P^.Size * 0.5;
+    Rot := P^.Rotation;
+    SinCos(Rot, S, C);
+    SAdd := (C + S) * P^.Size * 0.5;
+    SSub := (C - S) * P^.Size * 0.5;
     Col := P^.Color;
-    V1 := Vector3Single(P^.Position[0] - Sub, P^.Position[1] - Add, 0);
-    V2 := Vector3Single(P^.Position[0] - Add, P^.Position[1] + Sub, 0);
-    V3 := Vector3Single(P^.Position[0] + Sub, P^.Position[1] + Add, 0);
-    V4 := Vector3Single(P^.Position[0] + Add, P^.Position[1] - Sub, 0);
-    CoordList.AddArray([V1, V2, V3, V1, V3, V4]);
-    ColorList.AddArray([Col, Col, Col, Col, Col, Col]);
-    TexCoordList.AddArray(TexCoordBatch);
+    V1 := Vector3(P^.Position[0] - SSub, P^.Position[1] - SAdd, 0);
+    V2 := Vector3(P^.Position[0] - SAdd, P^.Position[1] + SSub, 0);
+    V3 := Vector3(P^.Position[0] + SSub, P^.Position[1] + SAdd, 0);
+    V4 := Vector3(P^.Position[0] + SAdd, P^.Position[1] - SSub, 0);
+    CoordList.AddRange([V1, V2, V3, V1, V3, V4]);
+    ColorList.AddRange([Col, Col, Col, Col, Col, Col]);
+    TexCoordList.AddRange(TexCoordBatch);
     Inc(P);
   end;
 
@@ -650,10 +651,10 @@ begin
   { This is a 2d particle emitter and naturally we dont want it to be affected
     by any 3d light sources, by setting these values we tell the engine's light
     system to ignore the particles, make it very fast unlit. }
-  ShapeNode.Material.DiffuseColor := Vector3Single(0, 0, 0);
-  ShapeNode.Material.SpecularColor := Vector3Single(0, 0, 0);
+  ShapeNode.Material.DiffuseColor := Vector3(0, 0, 0);
+  ShapeNode.Material.SpecularColor := Vector3(0, 0, 0);
   ShapeNode.Material.AmbientIntensity := 0;
-  ShapeNode.Material.EmissiveColor := Vector3Single(1, 1, 1);
+  ShapeNode.Material.EmissiveColor := Vector3(1, 1, 1);
 
   FBlendModeNode := TBlendModeNode.Create;
   ShapeNode.Appearance.FdBlendMode.Value := FBlendModeNode;
