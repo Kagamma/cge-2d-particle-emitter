@@ -1,6 +1,6 @@
 unit Castle2DParticleEmitter;
 
-{$mode objfpc}{$H+}
+{$MODE DELPHI}
 {$COPERATORS ON}
 
 interface
@@ -8,9 +8,8 @@ interface
 uses
   Classes, SysUtils,
   Castle3D, CastleSceneCore, Castle2DSceneManager,
-  CastleVectors, CastleGenericLists,
-  X3DNodes,
-  fgl;
+  CastleVectors, Generics.Collections,
+  X3DNodes;
 
 type
   TCastleEmitterType = (etGravity, etRadial);
@@ -37,8 +36,13 @@ type
     EmitRotation,
     EmitRotationDelta: single;
   end;
-  TCastle2DParticleList = specialize TGenericStructList<TCastle2DParticle>;
-  TCastle2DParticleBlendMap = specialize TFPGMap<integer, string>;
+
+  TCastle2DParticleList = class(TList<TCastle2DParticle>)
+  public
+    function Ptr(const APos: integer): PCastle2DParticle;
+  end;
+
+  TCastle2DParticleBlendDict = TDictionary<integer, string>;
 
   { This class acts as a place holder for effects. }
   TCastle2DParticleEffect = class
@@ -185,7 +189,12 @@ const
      (Data: (0, 1)), (Data: (1, 0)), (Data: (1, 1)));
 
 var
-  BlendMap: TCastle2DParticleBlendMap;
+  BlendDict: TCastle2DParticleBlendDict;
+
+function TCastle2DParticleList.Ptr(const APos: integer): PCastle2DParticle;
+begin
+  Result := @FItems[APos];
+end;
 
 procedure TCastle2DParticleEffect.Clone(var ATarget: TCastle2DParticleEffect);
 begin
@@ -692,25 +701,25 @@ begin
   FCoordNode.FdPoint.Items.Capacity := FEffect.MaxParticles * 6;
   FTexCoordNode.FdPoint.Items.Capacity := FEffect.MaxParticles * 6;
   FColorNode.FdColor.Items.Capacity := FEffect.MaxParticles * 6;
-  FBlendModeNode.FdSrcFactor.Send(BlendMap[FEffect.BlendFuncSource]);
-  FBlendModeNode.FdDestFactor.Send(BlendMap[FEffect.BlendFuncDestination]);
+  FBlendModeNode.FdSrcFactor.Send(BlendDict[FEffect.BlendFuncSource]);
+  FBlendModeNode.FdDestFactor.Send(BlendDict[FEffect.BlendFuncDestination]);
 end;
 
 initialization
-  BlendMap := TCastle2DParticleBlendMap.Create;
-  BlendMap[0] := 'zero';
-  BlendMap[1] := 'one';                       
-  BlendMap[768] := 'src_color';
-  BlendMap[769] := 'one_minus_src_color';
-  BlendMap[770] := 'src_alpha';
-  BlendMap[771] := 'one_minus_src_alpha';
-  BlendMap[772] := 'dst_alpha';
-  BlendMap[773] := 'one_minus_dst_alpha';
-  BlendMap[774] := 'dst_color';
-  BlendMap[775] := 'one_minus_dst_color';
+  BlendDict := TCastle2DParticleBlendDict.Create;
+  BlendDict.Add(0, 'zero');
+  BlendDict.Add(1, 'one');
+  BlendDict.Add(768, 'src_color');
+  BlendDict.Add(769, 'one_minus_src_color');
+  BlendDict.Add(770, 'src_alpha');
+  BlendDict.Add(771, 'one_minus_src_alpha');
+  BlendDict.Add(772, 'dst_alpha');
+  BlendDict.Add(773, 'one_minus_dst_alpha');
+  BlendDict.Add(774, 'dst_color');
+  BlendDict.Add(775, 'one_minus_dst_color');
 
 finalization
-  BlendMap.Free;
+  BlendDict.Free;
 
 end.
 
