@@ -7,7 +7,7 @@ interface
 
 uses
   Classes, SysUtils,
-  Castle3D, CastleSceneCore, Castle2DSceneManager,
+  Castle3D, CastleSceneCore, Castle2DSceneManager, CastleComponentSerialize,
   CastleVectors, Generics.Collections,
   X3DNodes;
 
@@ -132,8 +132,9 @@ type
   end;
 
   { 2D particle emitter for CGE. }
-  TCastle2DParticleEmitter = class(T2DScene)
+  TCastle2DParticleEmitter = class(TCastle2DScene)
   private
+    FURL: string;
     FEffect: TCastle2DParticleEffect;
     FCoordNode: TCoordinateNode;
     FColorNode: TColorRGBANode;
@@ -174,6 +175,8 @@ type
     property ParticleCount: integer read FParticleCount;
     property ReleaseWhenDone: boolean read FReleaseWhenDone write FReleaseWhenDone;
     property EmissionTime: single read FEmissionTime write FEmissionTime;
+  published
+    property URL: string read FURL write LoadPEX;
   end;
 
 implementation
@@ -231,7 +234,7 @@ begin
   ATarget.MinRadiusVariance := MinRadiusVariance;
   ATarget.RotatePerSecond := RotatePerSecond;
   ATarget.RotatePerSecondVariance := RotatePerSecondVariance;
-  ATarget.BlendFuncSource := BlendFuncSource;                
+  ATarget.BlendFuncSource := BlendFuncSource;
   ATarget.BlendFuncDestination := BlendFuncDestination;
   ATarget.RotationStart := RotationStart;
   ATarget.RotationStartVariance := RotationStartVariance;
@@ -297,7 +300,7 @@ begin
     FGravity := Vector2(
         XPathAsNumber('//gravity/@x', Doc),
         XPathAsNumber('//gravity/@y', Doc)
-    );          
+    );
     FRadialAcceleration :=
         XPathAsNumber('//radialAcceleration/@value', Doc);
     FRadialAccelVariance :=
@@ -311,7 +314,7 @@ begin
         XPathAsNumber('//startColor/@green', Doc),
         XPathAsNumber('//startColor/@blue', Doc),
         XPathAsNumber('//startColor/@alpha', Doc)
-    );                                         
+    );
     FStartColorVariance := Vector4(
         XPathAsNumber('//startColorVariance/@red', Doc),
         XPathAsNumber('//startColorVariance/@green', Doc),
@@ -329,7 +332,7 @@ begin
         XPathAsNumber('//finishColorVariance/@green', Doc),
         XPathAsNumber('//finishColorVariance/@blue', Doc),
         XPathAsNumber('//finishColorVariance/@alpha', Doc)
-    );         
+    );
     FMaxParticles :=
         Round(XPathAsNumber('//maxParticles/@value', Doc));
     FStartParticleSize :=
@@ -406,6 +409,7 @@ begin
     FreeAndNil(FEffect);
   FEffect := TCastle2DParticleEffect.Create;
   FEffect.Load(AURL);
+  FURL := AURL;
   RefreshEffect;
 end;
 
@@ -419,7 +423,7 @@ begin
     FEffect := AEffect;
   end
   else
-    AEffect.Clone(FEffect); 
+    AEffect.Clone(FEffect);
   RefreshEffect;
 end;
 
@@ -445,7 +449,7 @@ begin
     exit(false);
   InvLifeSpan := 1 / LifeSpan;
   P := FParticleList.Ptr(FParticleCount);
-  Inc(FParticleCount);          
+  Inc(FParticleCount);
   P^.TimeToLive := LifeSpan;
 
   P^.Position[0] :=
@@ -454,7 +458,7 @@ begin
       FEffect.SourcePosition[1] + FEffect.SourcePositionVariance[1] * (Random * 2 - 1);
 
   Speed := FEffect.Speed + FEffect.SpeedVariance * (Random * 2 - 1);
-  Angle := FEffect.Angle + FEffect.AngleVariance * (Random * 2 - 1);  
+  Angle := FEffect.Angle + FEffect.AngleVariance * (Random * 2 - 1);
   SinCos(Angle, S, C);
   P^.Velocity := Vector2(Speed * C, Speed * S);
 
@@ -515,13 +519,13 @@ begin
       end;
     etGravity:
       begin
-        DistanceX := P^.Position[0] - P^.StartPos[0];    
+        DistanceX := P^.Position[0] - P^.StartPos[0];
         DistanceY := P^.Position[1] - P^.StartPos[1];
         DistanceScalar := Vector2(DistanceX, DistanceY).Length;
         if DistanceScalar < 0.0001 then
           DistanceScalar := 0.0001;
 
-        RadialX := DistanceX / DistanceScalar;     
+        RadialX := DistanceX / DistanceScalar;
         RadialY := DistanceY / DistanceScalar;
 
         TangentialX := -RadialX;
@@ -558,7 +562,7 @@ var
   P: PCastle2DParticle;
   i: integer;
   ParticleLifeSpan: single;
-begin       
+begin
   inherited;
 
   if FParticleList.Count = 0 then
@@ -626,10 +630,10 @@ begin
   end;
 
   { Manually tell the engine we change the data. }
-  FCoordNode.FdPoint.Changed;                     
+  FCoordNode.FdPoint.Changed;
   FTexCoordNode.FdPoint.Changed;
   FColorNode.FdColor.Changed;
-     
+
   RemoveMe := rtNone;
   if FReleaseWhenDone then
   begin
@@ -692,7 +696,7 @@ procedure TCastle2DParticleEmitter.RefreshEffect;
 begin
   FImageTexNode.FdUrl.Send([FEffect.Texture]);
   FEmissionTime := FEffect.Duration;
-  FEmitParticleTime := 0;   
+  FEmitParticleTime := 0;
   if FParticleCount > FEffect.MaxParticles then
     FParticleCount := Max(0, FEffect.MaxParticles - 1);
   FParticleList.Count := FEffect.MaxParticles;
@@ -717,6 +721,7 @@ initialization
   BlendDict.Add(773, 'one_minus_dst_alpha');
   BlendDict.Add(774, 'dst_color');
   BlendDict.Add(775, 'one_minus_dst_color');
+  RegisterSerializableComponent(TCastle2DParticleEmitter, '2D Particle Emitter');
 
 finalization
   BlendDict.Free;
