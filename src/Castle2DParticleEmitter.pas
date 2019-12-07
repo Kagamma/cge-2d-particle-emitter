@@ -135,6 +135,7 @@ type
   TCastle2DParticleEmitter = class(TCastle2DScene)
   private
     FURL: string;
+    FStartEmitting: Boolean;
     FEffect: TCastle2DParticleEffect;
     FCoordNode: TCoordinateNode;
     FColorNode: TColorRGBANode;
@@ -177,6 +178,7 @@ type
     property EmissionTime: single read FEmissionTime write FEmissionTime;
   published
     property URL: string read FURL write LoadPEX;
+    property StartEmitting: Boolean read FStartEmitting write FStartEmitting default True;
   end;
 
 implementation
@@ -442,7 +444,7 @@ var
   FinishColor: TVector4;
   P: PCastle2DParticle;
 begin
-  if FParticleCount >= FEffect.MaxParticles then
+  if (not FStartEmitting) or (FParticleCount >= FEffect.MaxParticles) then
     exit(false);
   LifeSpan := FEffect.ParticleLifeSpan + FEffect.ParticleLifeSpanVariance * (Random * 2 - 1);
   if LifeSpan < 0 then
