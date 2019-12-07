@@ -45,6 +45,7 @@ begin
   Emitter.ReleaseWhenDone := true;
   Emitter := TCastle2DParticleEmitter.Create(T);
   Emitter.LoadPEX(AEffect, false);
+  Emitter.StartEmitting := True;
   T.Add(Emitter);
 end;
 
@@ -53,7 +54,7 @@ begin
   if CurrentMenu <> 0 then
     NewEmitter(EffectFire);
   CurrentMenu := 0;
-end; 
+end;
 
 class procedure TScriptHelper.TrippyEffect(AValue: TX3DField; const ATime: TX3DTime);
 begin
@@ -91,15 +92,15 @@ begin
 
   MenuScene := T2DScene.Create(SceneManager);
   MenuScene.Load(ApplicationData('menu.x3dv'));
-  MenuScene.RegisterCompiledScript('fire_effect', @TScriptHelper(nil).FireEffect);  
+  MenuScene.RegisterCompiledScript('fire_effect', @TScriptHelper(nil).FireEffect);
   MenuScene.RegisterCompiledScript('trippy_effect', @TScriptHelper(nil).TrippyEffect);
   MenuScene.RegisterCompiledScript('jellyfish_effect', @TScriptHelper(nil).JellyFishEffect);
   MenuScene.RegisterCompiledScript('spiral_effect', @TScriptHelper(nil).SpiralEffect);
   MenuScene.Spatial := [ssDynamicCollisions];
   MenuScene.ProcessEvents := true;
   SceneManager.Items.Add(MenuScene);
-                                            
-  EffectFire := TCastle2DParticleEffect.Create;  
+
+  EffectFire := TCastle2DParticleEffect.Create;
   EffectTrippy := TCastle2DParticleEffect.Create;
   EffectJellyFish := TCastle2DParticleEffect.Create;
   EffectSpiral := TCastle2DParticleEffect.Create;
@@ -113,6 +114,7 @@ begin
   T.Scale := Vector3(1, -1, 1);
   Emitter := TCastle2DParticleEmitter.Create(T);
   Emitter.LoadPEX(EffectFire, false);
+  Emitter.StartEmitting := True;
   T.Add(Emitter);
 
   SceneManager.Items.Add(T);

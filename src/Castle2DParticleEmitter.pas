@@ -177,8 +177,10 @@ type
     property ReleaseWhenDone: boolean read FReleaseWhenDone write FReleaseWhenDone;
     property EmissionTime: single read FEmissionTime write FEmissionTime;
   published
+    { URL of a .pex file. This will call LoadPEX to load particle effect }
     property URL: string read FURL write LoadPEX;
-    property StartEmitting: Boolean read FStartEmitting write FStartEmitting default True;
+    { If true, the emitter will start emitting }
+    property StartEmitting: Boolean read FStartEmitting write FStartEmitting default False;
   end;
 
 implementation
