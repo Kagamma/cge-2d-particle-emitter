@@ -123,7 +123,7 @@ end;
 procedure WindowRender(Container: TUIContainer);
 begin
   UIFont.Print(10, 40, Yellow, Format('Particle count: %d', [Emitter.ParticleCount]));
-  UIFont.Print(10, 10, Yellow, Format('FPS: %f', [Container.Fps.RealFps]));
+  UIFont.Print(10, 10, Yellow, Format('FPS: %s', [Container.Fps.ToString]));
 end;
 
 procedure WindowUpdate(Container: TUIContainer);

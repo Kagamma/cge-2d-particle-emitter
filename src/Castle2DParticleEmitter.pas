@@ -652,6 +652,7 @@ var
   ColNode: TCollisionNode;
   ShapeNode: TShapeNode;
   TriNode: TTriangleSetNode;
+  Material: TMaterialNode;
 begin
   Root := TX3DRootNode.Create;
   { We dont want the engine to perform collision detection on our particles,
@@ -664,14 +665,16 @@ begin
   ColNode.FdChildren.Add(ShapeNode);
 
   ShapeNode.Appearance := TAppearanceNode.Create;
-  ShapeNode.Material := TMaterialNode.Create;
+
+  Material := TMaterialNode.Create;
   { This is a 2d particle emitter and naturally we dont want it to be affected
     by any 3d light sources, by setting these values we tell the engine's light
     system to ignore the particles, make it very fast unlit. }
-  ShapeNode.Material.DiffuseColor := Vector3(0, 0, 0);
-  ShapeNode.Material.SpecularColor := Vector3(0, 0, 0);
-  ShapeNode.Material.AmbientIntensity := 0;
-  ShapeNode.Material.EmissiveColor := Vector3(1, 1, 1);
+  Material.DiffuseColor := Vector3(0, 0, 0);
+  Material.SpecularColor := Vector3(0, 0, 0);
+  Material.AmbientIntensity := 0;
+  Material.EmissiveColor := Vector3(1, 1, 1);
+  ShapeNode.Material := Material;
 
   FBlendModeNode := TBlendModeNode.Create;
   ShapeNode.Appearance.FdBlendMode.Value := FBlendModeNode;
