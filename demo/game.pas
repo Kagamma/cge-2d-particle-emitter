@@ -33,7 +33,7 @@ var
 
 type
   TScriptHelper = class
-    class procedure FireEffect(AValue: TX3DField; const ATime: TX3DTime); 
+    class procedure FireEffect(AValue: TX3DField; const ATime: TX3DTime);
     class procedure TrippyEffect(AValue: TX3DField; const ATime: TX3DTime);
     class procedure JellyFishEffect(AValue: TX3DField; const ATime: TX3DTime);
     class procedure SpiralEffect(AValue: TX3DField; const ATime: TX3DTime);
@@ -44,7 +44,7 @@ begin
   Emitter.EmissionTime := 0;
   Emitter.ReleaseWhenDone := true;
   Emitter := TCastle2DParticleEmitter.Create(T);
-  Emitter.LoadPEX(AEffect, false);
+  Emitter.LoadEffect(AEffect, false);
   Emitter.StartEmitting := True;
   T.Add(Emitter);
 end;
@@ -113,7 +113,7 @@ begin
   T.Translation := Vector3(-213, 0, 0);
   T.Scale := Vector3(1, -1, 1);
   Emitter := TCastle2DParticleEmitter.Create(T);
-  Emitter.LoadPEX(EffectFire, false);
+  Emitter.LoadEffect(EffectFire, false);
   Emitter.StartEmitting := True;
   T.Add(Emitter);
 

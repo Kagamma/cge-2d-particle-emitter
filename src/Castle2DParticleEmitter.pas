@@ -161,12 +161,17 @@ type
     procedure Update(const SecondsPassed: single; var RemoveMe: TRemoveType); override;
     { This method will free the current Effect if any, init a new FEffect and
       load settings from .PEX file. }
-    procedure LoadPEX(const AURL: string); overload;
+    procedure LoadEffect(const AURL: string); overload;
     { If AOwnEffect = false we will remove old Effect and replace it with
       AEffect, otherwise we will clone AEffect attributes to Effect (auto-init
       if needed). }
-    procedure LoadPEX(const AEffect: TCastle2DParticleEffect;
+    procedure LoadEffect(const AEffect: TCastle2DParticleEffect;
         const AOwnEffect: Boolean = true); overload;
+
+    procedure LoadPEX(const AURL: string); overload; deprecated 'Use LoadEffect';
+    procedure LoadPEX(const AEffect: TCastle2DParticleEffect;
+        const AOwnEffect: Boolean = true); overload; deprecated 'Use LoadEffect';
+
     { Refresh the emitter according to the change from effect. Normally we dont
       need to explicitly call it unless we make changes in Effect's Texture,
       Duration, BlendFunc and/or MaxParticles. }
@@ -178,7 +183,7 @@ type
     property EmissionTime: single read FEmissionTime write FEmissionTime;
   published
     { URL of a .pex file. This will call LoadPEX to load particle effect }
-    property URL: string read FURL write LoadPEX;
+    property URL: string read FURL write LoadEffect;
     { If true, the emitter will start emitting }
     property StartEmitting: Boolean read FStartEmitting write FStartEmitting default False;
   end;
@@ -407,7 +412,7 @@ begin
   inherited;
 end;
 
-procedure TCastle2DParticleEmitter.LoadPEX(const AURL: string);
+procedure TCastle2DParticleEmitter.LoadEffect(const AURL: string);
 begin
   if Assigned(FEffect) then
     FreeAndNil(FEffect);
@@ -417,7 +422,7 @@ begin
   RefreshEffect;
 end;
 
-procedure TCastle2DParticleEmitter.LoadPEX(const AEffect: TCastle2DParticleEffect;
+procedure TCastle2DParticleEmitter.LoadEffect(const AEffect: TCastle2DParticleEffect;
     const AOwnEffect: Boolean = true);
 begin
   if AOwnEffect then
@@ -429,6 +434,17 @@ begin
   else
     AEffect.Clone(FEffect);
   RefreshEffect;
+end;
+
+procedure TCastle2DParticleEmitter.LoadPEX(const AURL: string);
+begin
+  Self.LoadEffect(AURL);
+end;
+
+procedure TCastle2DParticleEmitter.LoadPEX(const AEffect: TCastle2DParticleEffect;
+    const AOwnEffect: Boolean = true);
+begin
+  Self.LoadEffect(AEffect, AOwnEffect);
 end;
 
 function TCastle2DParticleEmitter.EmitParticle: boolean;
@@ -724,4 +740,3 @@ finalization
   BlendDict.Free;
 
 end.
-
