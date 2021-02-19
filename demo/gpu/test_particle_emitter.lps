@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="12"/>
+    <BuildModes Active="Default"/>
+    <Units Count="3">
+      <Unit0>
+        <Filename Value="test_particle_emitter.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <CursorPos X="31" Y="7"/>
+        <UsageCount Value="20"/>
+        <Loaded Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="game.pas"/>
+        <UnitName Value="Game"/>
+        <EditorIndex Value="1"/>
+        <CursorPos X="31" Y="10"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="Castle2DParticleEmitterGPU.pas"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="380"/>
+        <CursorPos Y="399"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit2>
+    </Units>
+    <JumpHistory Count="4" HistoryIndex="3">
+      <Position1>
+        <Filename Value="test_particle_emitter.lpr"/>
+        <Caret Line="7" Column="31"/>
+      </Position1>
+      <Position2>
+        <Filename Value="game.pas"/>
+      </Position2>
+      <Position3>
+        <Filename Value="Castle2DParticleEmitterGPU.pas"/>
+        <Caret Line="11" Column="13"/>
+      </Position3>
+      <Position4>
+        <Filename Value="test_particle_emitter.lpr"/>
+        <Caret Line="7" Column="31"/>
+      </Position4>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes ActiveMode="default"/>
+    </RunParams>
+  </ProjectSession>
+</CONFIG>

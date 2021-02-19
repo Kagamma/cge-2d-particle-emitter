@@ -7,134 +7,95 @@ interface
 
 uses
   Classes, SysUtils,
-  Castle3D, CastleSceneCore, Castle2DSceneManager, CastleComponentSerialize,
+  CastleTransform, CastleScene, CastleSceneCore, Castle2DSceneManager, CastleComponentSerialize,
   CastleVectors, Generics.Collections,
   X3DNodes;
 
 type
-  TCastleEmitterType = (etGravity, etRadial);
+  TCastleEmitterType = (etGravity = 0, etRadial = 1);
 
   { 2D particle struct to hold current particle settings. }
   PCastle2DParticle = ^TCastle2DParticle;
-  TCastle2DParticle = record
-    TimeToLive: single;
+  TCastle2DParticle = packed record
     Position: TVector2;
+    TimeToLive: Single;
     Size,
     SizeDelta,
     Rotation,
-    RotationDelta: single;
+    RotationDelta: Single;
     Color,
     ColorDelta: TVector4;
     { Gravity parameters }
     StartPos,
     Velocity: TVector2;
     RadialAcceleration,
-    TangentialAcceleration: single;
+    TangentialAcceleration: Single;
     { Radial parameters }
     EmitRadius,
     EmitRadiusDelta,
     EmitRotation,
-    EmitRotationDelta: single;
+    EmitRotationDelta: Single;
   end;
 
   TCastle2DParticleList = class(TList<TCastle2DParticle>)
   public
-    function Ptr(const APos: integer): PCastle2DParticle;
+    function Ptr(const APos: Integer): PCastle2DParticle;
   end;
 
-  TCastle2DParticleBlendDict = TDictionary<integer, string>;
+  TCastle2DParticleBlendDict = TDictionary<Integer, String>;
 
   { This class acts as a place holder for effects. }
   TCastle2DParticleEffect = class
-  private
-    FTexture: string;
-    FSourcePosition,
-    FSourcePositionVariance: TVector2;
-    FSpeed,
-    FSpeedVariance,
-    FParticleLifeSpan,
-    FParticleLifeSpanVariance,
-    FAngle,
-    FAngleVariance: single;
-    FGravity: TVector2;
-    FRadialAcceleration,
-    FTangentialAcceleration,
-    FRadialAccelVariance,
-    FTangentialAccelVariance: single;
-    FStartColor,
-    FStartColorVariance,
-    FFinishColor,
-    FFinishColorVariance: TVector4;
-    FMaxParticles: integer;
-    FStartParticleSize,
-    FStartParticleSizeVariance,
-    FFinishParticleSize,
-    FFinishParticleSizeVariance,
-    FDuration: single;
-    FEmitterType: TCastleEmitterType;
-    FMaxRadius,
-    FMaxRadiusVariance,
-    FMinRadius,
-    FMinRadiusVariance,
-    FRotatePerSecond,
-    FRotatePerSecondVariance: single;
-    FBlendFuncSource,
-    FBlendFuncDestination: integer;
-    FRotationStart,
-    FRotationStartVariance,
-    FRotationEnd,
-    FRotationEndVariance: single;
   public
+    Texture: String;
+    SourcePosition,
+    SourcePositionVariance: TVector2;
+    Speed,
+    SpeedVariance,
+    ParticleLifeSpan,
+    ParticleLifeSpanVariance,
+    Angle,
+    AngleVariance: Single;
+    Gravity: TVector2;
+    RadialAcceleration,
+    TangentialAcceleration,
+    RadialAccelVariance,
+    TangentialAccelVariance: Single;
+    StartColor,
+    StartColorVariance,
+    FinishColor,
+    FinishColorVariance: TVector4;
+    MaxParticles: Integer;
+    StartParticleSize,
+    StartParticleSizeVariance,
+    FinishParticleSize,
+    FinishParticleSizeVariance,
+    Duration: Single;
+    EmitterType: TCastleEmitterType;
+    MaxRadius,
+    MaxRadiusVariance,
+    MinRadius,
+    MinRadiusVariance,
+    RotatePerSecond,
+    RotatePerSecondVariance: Single;
+    BlendFuncSource,
+    BlendFuncDestination: Integer;
+    RotationStart,
+    RotationStartVariance,
+    RotationEnd,
+    RotationEndVariance: Single;
     { Clone all attributes of this effect to another one. Good if we want to
       load the effect from file just once and then apply it to other emitters
       so all emitters have the same effect. }
     procedure Clone(var ATarget: TCastle2DParticleEffect);
     { Load particle attributes in .PEX format. }
-    procedure Load(const AURL: string);
-
-    property Texture: string read FTexture write FTexture;
-    property SourcePosition: TVector2 read FSourcePosition write FSourcePosition;
-    property SourcePositionVariance: TVector2 read FSourcePositionVariance write FSourcePositionVariance;
-    property Speed: single read FSpeed write FSpeed;
-    property SpeedVariance: single read FSpeedVariance write FSpeedVariance;
-    property ParticleLifeSpan: single read FParticleLifeSpan write FParticleLifeSpan;
-    property ParticleLifeSpanVariance: single read FParticleLifeSpanVariance write FParticleLifeSpanVariance;
-    property Angle: single read FAngle write FAngle;
-    property AngleVariance: single read FAngleVariance write FAngleVariance;
-    property Gravity: TVector2 read FGravity write FGravity;
-    property RadialAcceleration: single read FRadialAcceleration write FRadialAcceleration;
-    property TangentialAcceleration: single read FTangentialAcceleration write FTangentialAcceleration;
-    property RadialAccelVariance: single read FRadialAccelVariance write FRadialAccelVariance;
-    property TangentialAccelVariance: single read FTangentialAccelVariance write FTangentialAccelVariance;
-    property StartColor: TVector4 read FStartColor write FStartColor;
-    property StartColorVariance: TVector4 read FStartColorVariance write FStartColorVariance;
-    property FinishColor: TVector4 read FFinishColor write FFinishColor;
-    property FinishColorVariance: TVector4 read FFinishColorVariance write FFinishColorVariance;
-    property MaxParticles: integer read FMaxParticles write FMaxParticles;
-    property StartParticleSize: single read FStartParticleSize write FStartParticleSize;
-    property StartParticleSizeVariance: single read FStartParticleSizeVariance write FStartParticleSizeVariance;
-    property FinishParticleSize: single read FFinishParticleSize write FFinishParticleSize;
-    property FinishParticleSizeVariance: single read FFinishParticleSizeVariance write FFinishParticleSizeVariance;
-    property Duration: single read FDuration write FDuration;
-    property EmitterType: TCastleEmitterType read FEmitterType write FEmitterType;
-    property MaxRadius: single read FMaxRadius write FMaxRadius;
-    property MaxRadiusVariance: single read FMaxRadiusVariance write FMaxRadiusVariance;
-    property MinRadius: single read FMinRadius write FMinRadius;
-    property MinRadiusVariance: single read FMinRadiusVariance write FMinRadiusVariance;
-    property RotatePerSecond: single read FRotatePerSecond write FRotatePerSecond;
-    property RotatePerSecondVariance: single read FRotatePerSecondVariance write FRotatePerSecondVariance;
-    property BlendFuncSource: integer read FBlendFuncSource write FBlendFuncSource;
-    property BlendFuncDestination: integer read FBlendFuncDestination write FBlendFuncDestination;
-    property RotationStart: single read FRotationStart write FRotationStart;
-    property RotationStartVariance: single read FRotationStartVariance write FRotationStartVariance;
-    property RotationEnd: single read FRotationEnd write FRotationEnd;
-    property RotationEndVariance: single read FRotationEndVariance write FRotationEndVariance;
+    procedure Load(const AURL: String);
   end;
 
   { 2D particle emitter for CGE. }
   TCastle2DParticleEmitter = class(TCastle2DScene)
   private
-    FURL: string;
+    FURL: String;
     FStartEmitting: Boolean;
     FEffect: TCastle2DParticleEffect;
     FCoordNode: TCoordinateNode;
@@ -142,33 +103,33 @@ type
     FTexCoordNode: TTextureCoordinateNode;
     FImageTexNode: TImageTextureNode;
     FBlendModeNode: TBlendModeNode;
-    FParticleCount: integer;
+    FParticleCount: Integer;
     FParticleList: TCastle2DParticleList;
     { The value is in miliseconds. Set it to -1 for infinite emitting, 0 to
       stop the emitter and positive value for cooldown. }
     FEmissionTime,
-    FEmitParticleTime: single;
+    FEmitParticleTime: Single;
     { When this is set to true, the emitter will automatically freed after
       all particles destroyed. }
-    FReleaseWhenDone: boolean;
+    FReleaseWhenDone: Boolean;
 
-    function EmitParticle: boolean;
-    procedure UpdateParticle(const P: PCastle2DParticle; ATimeStep: single);
+    function EmitParticle: Boolean;
+    procedure UpdateParticle(const P: PCastle2DParticle; ATimeStep: Single);
     procedure InitNodeTree;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    procedure Update(const SecondsPassed: single; var RemoveMe: TRemoveType); override;
+    procedure Update(const SecondsPassed: Single; var RemoveMe: TRemoveType); override;
     { This method will free the current Effect if any, init a new FEffect and
       load settings from .PEX file. }
-    procedure LoadEffect(const AURL: string); overload;
+    procedure LoadEffect(const AURL: String); overload;
     { If AOwnEffect = false we will remove old Effect and replace it with
       AEffect, otherwise we will clone AEffect attributes to Effect (auto-init
       if needed). }
     procedure LoadEffect(const AEffect: TCastle2DParticleEffect;
         const AOwnEffect: Boolean = true); overload;
 
-    procedure LoadPEX(const AURL: string); overload; deprecated 'Use LoadEffect';
+    procedure LoadPEX(const AURL: String); overload; deprecated 'Use LoadEffect';
     procedure LoadPEX(const AEffect: TCastle2DParticleEffect;
         const AOwnEffect: Boolean = true); overload; deprecated 'Use LoadEffect';
 
@@ -178,12 +139,12 @@ type
     procedure RefreshEffect;
 
     property Effect: TCastle2DParticleEffect read FEffect;
-    property ParticleCount: integer read FParticleCount;
-    property ReleaseWhenDone: boolean read FReleaseWhenDone write FReleaseWhenDone;
-    property EmissionTime: single read FEmissionTime write FEmissionTime;
+    property ParticleCount: Integer read FParticleCount;
+    property ReleaseWhenDone: Boolean read FReleaseWhenDone write FReleaseWhenDone;
+    property EmissionTime: Single read FEmissionTime write FEmissionTime;
   published
-    { URL of a .pex file. This will call LoadPEX to load particle effect }
-    property URL: string read FURL write LoadEffect;
+    { URL of a .pex file. This will call LoadEffect to load particle effect }
+    property URL: String read FURL write LoadEffect;
     { If true, the emitter will start emitting }
     property StartEmitting: Boolean read FStartEmitting write FStartEmitting default False;
   end;
@@ -203,7 +164,7 @@ const
 var
   BlendDict: TCastle2DParticleBlendDict;
 
-function TCastle2DParticleList.Ptr(const APos: integer): PCastle2DParticle;
+function TCastle2DParticleList.Ptr(const APos: Integer): PCastle2DParticle;
 begin
   Result := @FItems[APos];
 end;
@@ -251,7 +212,7 @@ begin
   ATarget.RotationEndVariance := RotationEndVariance;
 end;
 
-procedure TCastle2DParticleEffect.Load(const AURL: string);
+procedure TCastle2DParticleEffect.Load(const AURL: String);
 var
   Doc: TXMLDocument;
   Stream: TStream;
@@ -260,126 +221,128 @@ var
   begin
     Result := EvaluateXPathExpression(AXPath, ADOMNode);
   end;
-  function XPathAsNumber(const AXPath: DOMString; const ADOMNode: TDOMNode): Extended;
+
+  function XPathAsNumber(const AXPath: DOMString; const ADOMNode: TDOMNode): Single;
   var
-    variable: TXPathVariable;
+    V: TXPathVariable;
   begin
-    variable := XPath(AXPath, ADOMNode);
-    Result := variable.AsNumber;
-    variable.Free;
+    V := XPath(AXPath, ADOMNode);
+    Result := V.AsNumber;
+    V.Free;
   end;
-  function XPathAsText(const AXPath: DOMString; const ADOMNode: TDOMNode): string;
+
+  function XPathAsText(const AXPath: DOMString; const ADOMNode: TDOMNode): String;
   var
-    variable: TXPathVariable;
+    V: TXPathVariable;
   begin
-    variable := XPath(AXPath, ADOMNode);
-    Result := string(variable.AsText);
-    variable.Free;
+    V := XPath(AXPath, ADOMNode);
+    Result := String(V.AsText);
+    V.Free;
   end;
 
 begin
   try
     Stream := Download(AURL);
     ReadXMLFile(Doc, Stream);
-    FTexture :=
+    Texture :=
         ExtractURIPath(AURL) + XPathAsText('//texture/@name', Doc);
     { We ignored source position as we dont need it. The scene itself should
       attach to a T3DTransform for positioning. }
-    FSourcePosition := Vector2(
+    SourcePosition := Vector2(
         //XPath('//sourcePosition/@x', Doc).AsNumber,
         //XPath('//sourcePosition/@y', Doc).AsNumber
         0, 0
     );
-    FSourcePositionVariance := Vector2(
+    SourcePositionVariance := Vector2(
         XPathAsNumber('//sourcePositionVariance/@x', Doc),
         XPathAsNumber('//sourcePositionVariance/@y', Doc)
     );
-    FSpeed :=
+    Speed :=
         XPathAsNumber('//speed/@value', Doc);
-    FSpeedVariance :=
+    SpeedVariance :=
         XPathAsNumber('//speedVariance/@value', Doc);
-    FParticleLifeSpan :=
+    ParticleLifeSpan :=
         XPathAsNumber('//particleLifeSpan/@value', Doc);
-    FParticleLifeSpanVariance :=
+    ParticleLifeSpanVariance :=
         XPathAsNumber('//particleLifespanVariance/@value', Doc);
-    FAngle :=
+    Angle :=
         DegToRad(XPathAsNumber('//angle/@value', Doc));
-    FAngleVariance :=
+    AngleVariance :=
         DegToRad(XPathAsNumber('//angleVariance/@value', Doc));
-    FGravity := Vector2(
+    Gravity := Vector2(
         XPathAsNumber('//gravity/@x', Doc),
         XPathAsNumber('//gravity/@y', Doc)
     );
-    FRadialAcceleration :=
+    RadialAcceleration :=
         XPathAsNumber('//radialAcceleration/@value', Doc);
-    FRadialAccelVariance :=
+    RadialAccelVariance :=
         XPathAsNumber('//radialAccelVariance/@value', Doc);
-    FTangentialAcceleration :=
+    TangentialAcceleration :=
         XPathAsNumber('//tangentialAcceleration/@value', Doc);
-    FTangentialAccelVariance :=
+    TangentialAccelVariance :=
         XPathAsNumber('//tangentialAccelVariance/@value', Doc);
-    FStartColor := Vector4(
+    StartColor := Vector4(
         XPathAsNumber('//startColor/@red', Doc),
         XPathAsNumber('//startColor/@green', Doc),
         XPathAsNumber('//startColor/@blue', Doc),
         XPathAsNumber('//startColor/@alpha', Doc)
     );
-    FStartColorVariance := Vector4(
+    StartColorVariance := Vector4(
         XPathAsNumber('//startColorVariance/@red', Doc),
         XPathAsNumber('//startColorVariance/@green', Doc),
         XPathAsNumber('//startColorVariance/@blue', Doc),
         XPathAsNumber('//startColorVariance/@alpha', Doc)
     );
-    FFinishColor := Vector4(
+    FinishColor := Vector4(
         XPathAsNumber('//finishColor/@red', Doc),
         XPathAsNumber('//finishColor/@green', Doc),
         XPathAsNumber('//finishColor/@blue', Doc),
         XPathAsNumber('//finishColor/@alpha', Doc)
     );
-    FFinishColorVariance := Vector4(
+    FinishColorVariance := Vector4(
         XPathAsNumber('//finishColorVariance/@red', Doc),
         XPathAsNumber('//finishColorVariance/@green', Doc),
         XPathAsNumber('//finishColorVariance/@blue', Doc),
         XPathAsNumber('//finishColorVariance/@alpha', Doc)
     );
-    FMaxParticles :=
+    MaxParticles :=
         Round(XPathAsNumber('//maxParticles/@value', Doc));
-    FStartParticleSize :=
+    StartParticleSize :=
         XPathAsNumber('//startParticleSize/@value', Doc);
-    FStartParticleSizeVariance :=
+    StartParticleSizeVariance :=
         XPathAsNumber('//startParticleSizeVariance/@value', Doc);
-    FFinishParticleSize :=
+    FinishParticleSize :=
         XPathAsNumber('//finishParticleSize/@value', Doc);
     { Fix for onebyonedesign's particle editor. }
-    FFinishParticleSizeVariance :=
+    FinishParticleSizeVariance :=
         XPathAsNumber('//finishParticleSizeVariance/@value | //FinishParticleSizeVariance/@value', Doc);
-    FDuration :=
+    Duration :=
         XPathAsNumber('//duration/@value', Doc);
-    FEmitterType :=
+    EmitterType :=
         TCastleEmitterType(Round(XPathAsNumber('//emitterType/@value', Doc)));
-    FMaxRadius :=
+    MaxRadius :=
         XPathAsNumber('//maxRadius/@value', Doc);
-    FMaxRadiusVariance :=
+    MaxRadiusVariance :=
         XPathAsNumber('//maxRadiusVariance/@value', Doc);
-    FMinRadius :=
+    MinRadius :=
         XPathAsNumber('//minRadius/@value', Doc);
-    FMinRadiusVariance :=
+    MinRadiusVariance :=
         XPathAsNumber('//minRadiusVariance/@value', Doc);
-    FRotatePerSecond :=
+    RotatePerSecond :=
         DegToRad(XPathAsNumber('//rotatePerSecond/@value', Doc));
-    FRotatePerSecondVariance :=
+    RotatePerSecondVariance :=
         DegToRad(XPathAsNumber('//rotatePerSecondVariance/@value', Doc));
-    FBlendFuncSource :=
+    BlendFuncSource :=
         Round(XPathAsNumber('//blendFuncSource/@value', Doc));
-    FBlendFuncDestination :=
+    BlendFuncDestination :=
         Round(XPathAsNumber('//blendFuncDestination/@value', Doc));
-    FRotationStart :=
+    RotationStart :=
         DegToRad(XPathAsNumber('//rotationStart/@value', Doc));
-    FRotationStartVariance :=
+    RotationStartVariance :=
         DegToRad(XPathAsNumber('//rotationStartVariance/@value', Doc));
-    FRotationEnd :=
+    RotationEnd :=
         DegToRad(XPathAsNumber('//rotationEnd/@value', Doc));
-    FRotationEndVariance :=
+    RotationEndVariance :=
         DegToRad(XPathAsNumber('//rotationEndVariance/@value', Doc));
   finally
     FreeAndNil(Doc);
@@ -412,7 +375,7 @@ begin
   inherited;
 end;
 
-procedure TCastle2DParticleEmitter.LoadEffect(const AURL: string);
+procedure TCastle2DParticleEmitter.LoadEffect(const AURL: String);
 begin
   if Assigned(FEffect) then
     FreeAndNil(FEffect);
@@ -436,7 +399,7 @@ begin
   RefreshEffect;
 end;
 
-procedure TCastle2DParticleEmitter.LoadPEX(const AURL: string);
+procedure TCastle2DParticleEmitter.LoadPEX(const AURL: String);
 begin
   Self.LoadEffect(AURL);
 end;
@@ -447,7 +410,7 @@ begin
   Self.LoadEffect(AEffect, AOwnEffect);
 end;
 
-function TCastle2DParticleEmitter.EmitParticle: boolean;
+function TCastle2DParticleEmitter.EmitParticle: Boolean;
 var
   S, C,
   LifeSpan,
@@ -458,7 +421,7 @@ var
   MinRadius,
   StartSize,
   FinishSize,
-  EndRotation: single;
+  EndRotation: Single;
   FinishColor: TVector4;
   P: PCastle2DParticle;
 begin
@@ -515,7 +478,7 @@ begin
   exit(true);
 end;
 
-procedure TCastle2DParticleEmitter.UpdateParticle(const P: PCastle2DParticle; ATimeStep: single);
+procedure TCastle2DParticleEmitter.UpdateParticle(const P: PCastle2DParticle; ATimeStep: Single);
 var
   tmp,
   DistanceX,
@@ -524,7 +487,7 @@ var
   RadialX,
   RadialY,
   TangentialX,
-  TangentialY: single;
+  TangentialY: Single;
 begin
   if ATimeStep > P^.TimeToLive then
     ATimeStep := P^.TimeToLive;
@@ -534,8 +497,8 @@ begin
       begin
         P^.EmitRotation -= P^.EmitRotationDelta * ATimeStep;
         P^.EmitRadius += P^.EmitRadiusDelta * ATimeStep;
-        P^.Position[0] := P^.StartPos[0] - Cos(P^.EmitRotation) * P^.EmitRadius;
-        P^.Position[1] := P^.StartPos[1] + Sin(P^.EmitRotation) * P^.EmitRadius;
+        P^.Position[0] := P^.StartPos[0] + Cos(P^.EmitRotation) * P^.EmitRadius;
+        P^.Position[1] := P^.StartPos[1] - Sin(P^.EmitRotation) * P^.EmitRadius;
       end;
     etGravity:
       begin
@@ -566,22 +529,22 @@ begin
   P^.Color += P^.ColorDelta * ATimeStep;
 end;
 
-procedure TCastle2DParticleEmitter.Update(const SecondsPassed: single; var RemoveMe: TRemoveType);
+procedure TCastle2DParticleEmitter.Update(const SecondsPassed: Single; var RemoveMe: TRemoveType);
 var
   Rot,
   C,
   S,
   SAdd,
   SSub,
-  TimeBetweenParticles: single;
+  TimeBetweenParticles: Single;
   V1, V2, V3, V4: TVector3;
   Col: TVector4;
   CoordList: TVector3List;
   TexCoordList: TVector2List;
   ColorList: TVector4List;
   P: PCastle2DParticle;
-  i: integer;
-  ParticleLifeSpan: single;
+  i: Integer;
+  ParticleLifeSpan: Single;
 begin
   inherited;
 

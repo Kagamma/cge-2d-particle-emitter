@@ -12,11 +12,15 @@
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)\"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="1">
+    <Files Count="2">
       <Item1>
         <Filename Value="..\src\Castle2DParticleEmitter.pas"/>
         <UnitName Value="Castle2DParticleEmitter"/>
       </Item1>
+      <Item2>
+        <Filename Value="..\src\Castle2DParticleEmitterGPU.pas"/>
+        <UnitName Value="Castle2DParticleEmitterGPU"/>
+      </Item2>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>
