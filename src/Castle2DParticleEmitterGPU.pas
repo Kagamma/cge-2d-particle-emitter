@@ -591,7 +591,7 @@ begin
   glFreeTexture(Self.Texture);
   Self.Texture := LoadGLTexture(
     Self.FEffect.Texture,
-    TextureFilter(minNearest, magNearest),
+    TextureFilter(minLinear, magLinear),
     Texture2DClampToEdge
   );
 
