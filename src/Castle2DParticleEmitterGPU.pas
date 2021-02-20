@@ -588,8 +588,6 @@ end;
 procedure TCastle2DParticleEmitterGPU.RefreshEffect;
 var
   I: Integer;
-  TimeBetweenParticles,
-  Lifespan: Single;
 begin
   Self.FEmissionTime := Self.FEffect.Duration;
   Self.FEmitParticleTime := 0;
@@ -650,16 +648,13 @@ begin
     glUniform1f(Self.UniformRotationEndVariance, Self.FEffect.RotationEndVariance);
   glUseProgram(0);
   // Generate initial lifecycle
-  TimeBetweenParticles := Self.FEffect.ParticleLifeSpan / Self.FEffect.MaxParticles;
-  LifeSpan := 0;
   for I := 0 to Self.FEffect.MaxParticles - 1 do
   begin
     with Self.Particles[I] do
     begin
-      TimeToLive := LifeSpan;
+      TimeToLive := -Random * (Self.FEffect.ParticleLifeSpan + Self.FEffect.ParticleLifeSpanVariance * (Random * 2 - 1));
       Position := Vector2(Random, Random);
     end;
-    LifeSpan := LifeSpan - TimeBetweenParticles;
   end;
   // Drawing VAO
   Self.CurrentBuffer := 0;
