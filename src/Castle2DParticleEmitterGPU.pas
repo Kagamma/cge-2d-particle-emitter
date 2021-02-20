@@ -84,6 +84,7 @@ type
       all particles destroyed. }
     FReleaseWhenDone: Boolean;
     FPosition: TVector2;
+    procedure SetStartEmitting(V: Boolean);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -113,7 +114,7 @@ type
     { URL of a .pex file. This will call LoadEffect to load particle effect }
     property URL: String read FURL write LoadEffect;
     { If true, the emitter will start emitting }
-    property StartEmitting: Boolean read FStartEmitting write FStartEmitting default False;
+    property StartEmitting: Boolean read FStartEmitting write SetStartEmitting default False;
   end;
 
 implementation
@@ -395,6 +396,13 @@ begin
   end;
 end;
 
+procedure TCastle2DParticleEmitterGPU.SetStartEmitting(V: Boolean);
+begin
+  Self.FStartEmitting := V;
+  if V and Assigned(FEffect) then
+    Self.FCountdownTillRemove := Self.FEffect.ParticleLifeSpan + Self.FEffect.ParticleLifeSpanVariance;
+end;
+
 constructor TCastle2DParticleEmitterGPU.Create(AOwner: TComponent);
 var
   V: Integer;
@@ -496,6 +504,11 @@ begin
       FEmissionTime := Max(0, FEmissionTime - SecondsPassed);
   end;
 
+  if not Self.FStartEmitting then
+  begin
+    Self.FCountdownTillRemove := Self.FCountdownTillRemove - SecondsPassed;
+  end;
+
   RemoveMe := rtNone;
   if Self.FReleaseWhenDone then
   begin
@@ -524,6 +537,9 @@ begin
   if not Self.FIsDrawn then
     Self.FIsDrawn := True
   else
+    Exit;
+
+  if (not Self.FStartEmitting) and (Self.FCountdownTillRemove <= 0) then
     Exit;
 
   M := RenderContext.ProjectionMatrix * Params.RenderingCamera.Matrix * Params.Transform^;
