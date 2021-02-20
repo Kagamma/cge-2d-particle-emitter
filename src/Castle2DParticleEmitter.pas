@@ -143,13 +143,13 @@ type
     property ParticleCount: Integer read FParticleCount;
     property ReleaseWhenDone: Boolean read FReleaseWhenDone write FReleaseWhenDone;
     property EmissionTime: Single read FEmissionTime write FEmissionTime;
-    { Move the position of emitter only }
-    property Position: TVector2 read FPosition write FPosition;
   published
     { URL of a .pex file. This will call LoadEffect to load particle effect }
     property URL: String read FURL write LoadEffect;
     { If true, the emitter will start emitting }
     property StartEmitting: Boolean read FStartEmitting write FStartEmitting default False;
+    { Move the position of emitter only }
+    property Position: TVector2 read FPosition write FPosition;
   end;
 
 implementation
@@ -368,6 +368,7 @@ begin
   FParticleList := TCastle2DParticleList.Create;
   FEmitParticleTime := 0;
   FReleaseWhenDone := false;
+  Self.Position := Vector2(0, 0);
 end;
 
 destructor TCastle2DParticleEmitter.Destroy;
