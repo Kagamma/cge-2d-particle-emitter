@@ -524,7 +524,10 @@ begin
   glEnable(GL_RASTERIZER_DISCARD);
   glUseProgram(Self.ShaderTFProg);
   glUniform1f(Self.UniformDeltaTime, Self.FSecondsPassed);
-  glUniform1f(Self.UniformEmissionTime, Self.FEmissionTime);
+  if Self.FStartEmitting then
+    glUniform1f(Self.UniformEmissionTime, Self.FEmissionTime)
+  else
+    glUniform1f(Self.UniformEmissionTime, 0);
   glUniform2fv(Self.UniformSourcePosition, 1, @Self.FPosition);
   glBindVertexArray(Self.VAOs[(CurrentBuffer + 1) mod 2]);
   glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, Self.VBOs[CurrentBuffer]);
