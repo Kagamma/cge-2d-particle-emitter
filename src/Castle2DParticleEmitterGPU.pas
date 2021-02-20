@@ -696,6 +696,7 @@ begin
 
     glBindVertexArray(0);
   end;
+  SetLength(Self.Particles, 0);
 end;
 
 initialization
