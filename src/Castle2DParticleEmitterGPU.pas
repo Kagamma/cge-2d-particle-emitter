@@ -74,6 +74,8 @@ type
     FParticleCount: Integer;
     FSecondsPassed: Single;
     FIsDrawn: Boolean;
+    { Countdown before remove the emitter }
+    FCountdownTillRemove,
     { The value is in miliseconds. Set it to -1 for infinite emitting, 0 to
       stop the emitter and positive value for cooldown. }
     FEmissionTime,
@@ -498,7 +500,13 @@ begin
   if Self.FReleaseWhenDone then
   begin
     if (Self.FEmissionTime = 0) then
-      RemoveMe := rtRemoveAndFree;
+    begin
+      Self.FCountdownTillRemove := Self.FCountdownTillRemove - SecondsPassed;
+      if (Self.FCountdownTillRemove <= 0) then
+      begin
+        RemoveMe := rtRemoveAndFree;
+      end;
+    end;
   end;
 end;
 
@@ -585,7 +593,8 @@ var
 begin
   Self.FEmissionTime := Self.FEffect.Duration;
   Self.FEmitParticleTime := 0;
-  Self.FParticleCount := 1;
+  Self.FParticleCount := Self.FEffect.MaxParticles;
+  Self.FCountdownTillRemove := Self.FEffect.ParticleLifeSpan + Self.FEffect.ParticleLifeSpanVariance;
   SetLength(Self.Particles, Self.FEffect.MaxParticles);
 
   if Self.FEffect.ParticleLifeSpan = 0 then
