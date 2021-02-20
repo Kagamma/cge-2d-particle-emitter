@@ -83,6 +83,7 @@ type
     { When this is set to true, the emitter will automatically freed after
       all particles destroyed. }
     FReleaseWhenDone: Boolean;
+    FPosition: TVector2;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -106,6 +107,8 @@ type
     property ParticleCount: Integer read FParticleCount;
     property ReleaseWhenDone: Boolean read FReleaseWhenDone write FReleaseWhenDone;
     property EmissionTime: Single read FEmissionTime write FEmissionTime;
+    { Move the position of emitter only }
+    property Position: TVector2 read FPosition write FPosition;
   published
     { URL of a .pex file. This will call LoadEffect to load particle effect }
     property URL: String read FURL write LoadEffect;
@@ -212,7 +215,7 @@ const
 '  outTimeToLive = effect.particleLifeSpan + effect.particleLifeSpanVariance * (rnd() * 2.0 - 1.0);'nl
 '  float invLifeSpan = 1.0 / outTimeToLive;'nl
 '  outPosition = effect.sourcePosition + effect.sourcePositionVariance * vec2(rnd() * 2.0 - 1.0, rnd() * 2.0 - 1.0);'nl
-'  outStartPos = vec2(0.0);'nl
+'  outStartPos = effect.sourcePosition;'nl
 '  float speed = effect.speed + effect.speedVariance * (rnd() * 2.0 - 1.0);'nl
 '  float angle = effect.angle + effect.angleVariance * (rnd() * 2.0 - 1.0);'nl
 '  float s = sin(angle);'nl
@@ -521,6 +524,7 @@ begin
   glUseProgram(Self.ShaderTFProg);
   glUniform1f(Self.UniformDeltaTime, Self.FSecondsPassed);
   glUniform1f(Self.UniformEmissionTime, Self.FEmissionTime);
+  glUniform2fv(Self.UniformSourcePosition, 1, @Self.FPosition);
   glBindVertexArray(Self.VAOs[(CurrentBuffer + 1) mod 2]);
   glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, Self.VBOs[CurrentBuffer]);
   glBeginTransformFeedback(GL_POINTS);

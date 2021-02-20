@@ -112,6 +112,7 @@ type
     { When this is set to true, the emitter will automatically freed after
       all particles destroyed. }
     FReleaseWhenDone: Boolean;
+    FPosition: TVector2;
 
     function EmitParticle: Boolean;
     procedure UpdateParticle(const P: PCastle2DParticle; ATimeStep: Single);
@@ -142,6 +143,8 @@ type
     property ParticleCount: Integer read FParticleCount;
     property ReleaseWhenDone: Boolean read FReleaseWhenDone write FReleaseWhenDone;
     property EmissionTime: Single read FEmissionTime write FEmissionTime;
+    { Move the position of emitter only }
+    property Position: TVector2 read FPosition write FPosition;
   published
     { URL of a .pex file. This will call LoadEffect to load particle effect }
     property URL: String read FURL write LoadEffect;
@@ -436,9 +439,10 @@ begin
   P^.TimeToLive := LifeSpan;
 
   P^.Position[0] :=
-      FEffect.SourcePosition[0] + FEffect.SourcePositionVariance[0] * (Random * 2 - 1);
+      Self.FPosition[0] + FEffect.SourcePositionVariance[0] * (Random * 2 - 1);
   P^.Position[1] :=
-      FEffect.SourcePosition[1] + FEffect.SourcePositionVariance[1] * (Random * 2 - 1);
+      Self.FPosition[1] + FEffect.SourcePositionVariance[1] * (Random * 2 - 1);
+  P^.StartPos := Self.FPosition;
 
   Speed := FEffect.Speed + FEffect.SpeedVariance * (Random * 2 - 1);
   Angle := FEffect.Angle + FEffect.AngleVariance * (Random * 2 - 1);
