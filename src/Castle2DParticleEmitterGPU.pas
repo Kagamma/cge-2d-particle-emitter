@@ -240,7 +240,7 @@ const
 '}'nl
 
 'void updateParticle() {'nl
-'  float timeBetweenParticle = max(0.01, effect.particleLifeSpan / effect.maxParticles);'nl
+'  float timeBetweenParticle = max(deltaTime, effect.particleLifeSpan / effect.maxParticles);'nl
 '  if (outTimeToLive <= 0.0 && emissionTime == 0.0) {'nl
 '    outTimeToLive = (rnd() - 1.0) * effect.particleLifeSpan;'nl
 '  }'nl
