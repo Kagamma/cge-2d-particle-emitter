@@ -35,9 +35,7 @@ type
     UniformAngle,
     UniformAngleVariance,
     UniformGravity,
-    UniformRadialAcceleration,
     UniformTangentialAcceleration,
-    UniformRadialAccelVariance,
     UniformTangentialAccelVariance,
     UniformStartColor,
     UniformStartColorVariance,
@@ -159,9 +157,7 @@ const
 '  float angle;'nl
 '  float angleVariance;'nl
 '  vec2 gravity;'nl
-'  float radialAcceleration;'nl
 '  float tangentialAcceleration;'nl
-'  float radialAccelVariance;'nl
 '  float tangentialAccelVariance;'nl
 '  vec4 startColor;'nl
 '  vec4 startColorVariance;'nl
@@ -192,7 +188,7 @@ const
 'vec2 seed;'nl
 
 'float rnd() {'nl
-'  float r = fract(sin(seed.x + seed.y) * 43758.5453123);'nl
+'  float r = fract(sin(seed.x + seed.y + deltaTime) * 43758.5453123);'nl
 '  seed += r;'nl
 '  return r;'nl
 '}'nl
@@ -227,7 +223,6 @@ const
 '  outEmitRadius = vec2(maxRadius, (minRadius - maxRadius) * invLifeSpan);'nl
 '  outEmitRotation.x = effect.angle + effect.angleVariance * (rnd() * 2.0 - 1.0);'nl
 '  outEmitRotation.y = effect.rotatePerSecond + effect.rotatePerSecondVariance * (rnd() * 2.0 - 1.0);'nl
-'  outAcceleration.x = effect.radialAcceleration + effect.radialAccelVariance * (rnd() * 2.0 - 1.0);'nl
 '  outAcceleration.y = effect.tangentialAcceleration + effect.tangentialAccelVariance * (rnd() * 2.0 - 1.0);'nl
 '  float startSize = max(0.1, effect.startParticleSize + effect.startParticleSizeVariance * (rnd() * 2.0 - 1.0));'nl
 '  float finishSize = max(0.1, effect.finishParticleSize + effect.finishParticleSizeVariance * (rnd() * 2.0 - 1.0));'nl
@@ -447,9 +442,7 @@ begin
   Self.UniformAngle := glGetUniformLocation(Self.ShaderTFProg, 'effect.angle');
   Self.UniformAngleVariance := glGetUniformLocation(Self.ShaderTFProg, 'effect.angleVariance');
   Self.UniformGravity := glGetUniformLocation(Self.ShaderTFProg, 'effect.gravity');
-  Self.UniformRadialAcceleration := glGetUniformLocation(Self.ShaderTFProg, 'effect.radialAcceleration');
   Self.UniformTangentialAcceleration := glGetUniformLocation(Self.ShaderTFProg, 'effect.tangentialAcceleration');
-  Self.UniformRadialAccelVariance := glGetUniformLocation(Self.ShaderTFProg, 'effect.radialAccelVariance');
   Self.UniformTangentialAccelVariance := glGetUniformLocation(Self.ShaderTFProg, 'effect.tangentialAccelVariance');
   Self.UniformStartColor := glGetUniformLocation(Self.ShaderTFProg, 'effect.startColor');
   Self.UniformStartColorVariance := glGetUniformLocation(Self.ShaderTFProg, 'effect.startColorVariance');
@@ -638,9 +631,7 @@ begin
     glUniform1f(Self.UniformAngle, Self.FEffect.Angle);
     glUniform1f(Self.UniformAngleVariance, Self.FEffect.AngleVariance);
     glUniform2fv(Self.UniformGravity, 1, @Self.FEffect.Gravity);
-    glUniform1f(Self.UniformRadialAcceleration, Self.FEffect.RadialAcceleration);
     glUniform1f(Self.UniformTangentialAcceleration, Self.FEffect.TangentialAcceleration);
-    glUniform1f(Self.UniformRadialAccelVariance, Self.FEffect.RadialAccelVariance);
     glUniform1f(Self.UniformTangentialAccelVariance, Self.FEffect.TangentialAccelVariance);
     glUniform4fv(Self.UniformStartColor, 1, @Self.FEffect.StartColor);
     glUniform4fv(Self.UniformStartColorVariance, 1, @Self.FEffect.StartColorVariance);
