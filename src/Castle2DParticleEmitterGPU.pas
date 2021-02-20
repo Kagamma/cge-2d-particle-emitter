@@ -342,6 +342,7 @@ const
 
 'void main() {'nl
 '  outColor = texture(baseColor, fragTexCoord) * fragColor;'nl
+'  outColor.rgb = outColor.rgb * outColor.a;'nl
 '}';
 
   Varyings: array[0..10] of PChar = (

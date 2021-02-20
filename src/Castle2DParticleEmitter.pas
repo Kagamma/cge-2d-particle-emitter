@@ -606,7 +606,7 @@ begin
     SinCos(Rot, S, C);
     SAdd := (C + S) * P^.Size * 0.5;
     SSub := (C - S) * P^.Size * 0.5;
-    Col := P^.Color;
+    Col := Vector4(P^.Color.XYZ * P^.Color.W, P^.Color.W);
     V1 := Vector3(P^.Position[0] - SSub, P^.Position[1] - SAdd, 0);
     V2 := Vector3(P^.Position[0] - SAdd, P^.Position[1] + SSub, 0);
     V3 := Vector3(P^.Position[0] + SSub, P^.Position[1] + SAdd, 0);
