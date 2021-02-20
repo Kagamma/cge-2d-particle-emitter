@@ -239,6 +239,9 @@ const
 
 'void updateParticle() {'nl
 '  float timeBetweenParticle = max(0.01, effect.particleLifeSpan / effect.maxParticles);'nl
+'  if (outTimeToLive <= 0.0 && emissionTime == 0.0) {'nl
+'    outTimeToLive = (rnd() - 1.0) * effect.particleLifeSpan;'nl
+'  }'nl
 '  if (outTimeToLive == 0.0 && emissionTime != 0.0) {'nl
 '    emitParticle();'nl
 '  } else if (outTimeToLive < 0.0) {'nl
