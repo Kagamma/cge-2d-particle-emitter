@@ -185,16 +185,12 @@ const
 'uniform float emissionTime;'nl
 'uniform float deltaTime;'nl
 
-'vec2 seed;'nl
-
 'float rnd() {'nl
-'  float r = fract(sin(seed.x + seed.y + deltaTime) * 43758.5453123);'nl
-'  seed += r;'nl
-'  return r;'nl
+'  outAcceleration.x = fract(sin(outAcceleration.x + outPosition.x + outVelocity.x + outVelocity.y + outColor.x + deltaTime) * 43758.5453123);'nl
+'  return outAcceleration.x;'nl
 '}'nl
 
 'void initParticle() {'nl
-'  seed = inPosition;'nl
 '  outPosition = inPosition;'nl
 '  outColor = inColor;'nl
 '  outTimeToLive = inTimeToLive;'nl
@@ -661,6 +657,7 @@ begin
     begin
       TimeToLive := -Random * (Self.FEffect.ParticleLifeSpan + Self.FEffect.ParticleLifeSpanVariance * (Random * 2 - 1));
       Position := Vector2(Random, Random);
+      RadialAcceleration := Random;
     end;
   end;
   // Drawing VAO
