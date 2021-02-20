@@ -157,7 +157,7 @@ implementation
 uses
   DOM, XMLRead, XPath,
   Math,
-  CastleDownload, CastleURIUtils;
+  CastleDownload, CastleURIUtils, CastleRenderOptions;
 
 const
   TexCoordBatch: array [0..5] of TVector2 =
@@ -606,7 +606,7 @@ begin
     SinCos(Rot, S, C);
     SAdd := (C + S) * P^.Size * 0.5;
     SSub := (C - S) * P^.Size * 0.5;
-    Col := Vector4(P^.Color.XYZ * P^.Color.W, P^.Color.W);
+    Col := P^.Color;//Vector4(P^.Color.XYZ * P^.Color.W, P^.Color.W);
     V1 := Vector3(P^.Position[0] - SSub, P^.Position[1] - SAdd, 0);
     V2 := Vector3(P^.Position[0] - SAdd, P^.Position[1] + SSub, 0);
     V3 := Vector3(P^.Position[0] + SSub, P^.Position[1] + SAdd, 0);
@@ -636,6 +636,8 @@ var
   ColNode: TCollisionNode;
   ShapeNode: TShapeNode;
   TriNode: TTriangleSetNode;
+  Effect: TEffectNode;
+  EffectPart: TEffectPartNode;
 begin
   Root := TX3DRootNode.Create;
   { We dont want the engine to perform collision detection on our particles,
@@ -669,6 +671,18 @@ begin
   TriNode.FdCoord.Value := FCoordNode;
   TriNode.FdTexCoord.Value := FTexCoordNode;
   TriNode.FdColor.Value := FColorNode;
+
+  Effect := TEffectNode.Create;
+  Effect.Language := slGLSL;
+
+  EffectPart := TEffectPartNode.Create;
+  EffectPart.ShaderType := stFragment;
+  EffectPart.Contents :=
+'void PLUG_texture_apply(inout vec4 fragment_color, const in vec3 normal_eye) {' +
+'  fragment_color.rgb *= fragment_color.a;' +
+'}';
+  Effect.SetParts([EffectPart]);
+  Root.FdChildren.Add(Effect);
 
   Self.Load(Root, true);
 end;
