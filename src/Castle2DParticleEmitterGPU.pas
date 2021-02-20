@@ -1,7 +1,5 @@
 unit Castle2DParticleEmitterGPU;
 
-{$I castleconf.inc}
-
 {$coperators on}
 {$macro on}
 {$define nl:=+ LineEnding +}
@@ -10,7 +8,7 @@ interface
 
 uses
   Classes, SysUtils,
-  {$ifdef CASTLE_OBJFPC}CastleGL,{$else} GL, GLExt,{$endif}
+  GL, GLExt,
   CastleTransform, CastleScene, CastleSceneCore, Castle2DSceneManager, CastleComponentSerialize,
   CastleVectors, castlerendercontext, Generics.Collections, CastleGLImages, CastleLog,
   Castle2DParticleEmitter,
