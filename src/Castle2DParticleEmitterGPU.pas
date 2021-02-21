@@ -98,6 +98,11 @@ type
     { Refresh the emitter according to the change from effect. Normally we dont
       need to explicitly call it unless we make changes in Effect's Texture,
       Duration, BlendFunc and/or MaxParticles. }
+
+    procedure LoadPEX(const AURL: String); overload; deprecated 'Use LoadEffect';
+    procedure LoadPEX(const AEffect: TCastle2DParticleEffect;
+        const AOwnEffect: Boolean = true); overload; deprecated 'Use LoadEffect';
+
     procedure RefreshEffect;
 
     property Effect: TCastle2DParticleEffect read FEffect;
@@ -302,7 +307,7 @@ const
 'uniform mat4 mvpMatrix;'nl
 
 'void main() {'nl
-'  if (geomTimeToLive[0] > 0) {'nl
+'  if (geomTimeToLive[0] > 0.0) {'nl
 '    fragColor = geomColor[0];'nl
 
 '    float s = sin(geomRotation[0].x);'nl
@@ -373,16 +378,16 @@ begin
   if Status = GL_FALSE then
   begin
     if Kind = GL_VERTEX_SHADER then
-      WritelnLog('TCastle2DParticleEmitterGPU', 'Compile vertex shader failed!')
+      WritelnWarning('TCastle2DParticleEmitterGPU', 'Compile vertex shader failed!')
     else if Kind = GL_GEOMETRY_SHADER then
-      WritelnLog('TCastle2DParticleEmitterGPU', 'Compile geometry shader failed!')
+      WritelnWarning('TCastle2DParticleEmitterGPU', 'Compile geometry shader failed!')
     else
-      WritelnLog('TCastle2DParticleEmitterGPU', 'Compile fragment shader failed!');
+      WritelnWarning('TCastle2DParticleEmitterGPU', 'Compile fragment shader failed!');
     SetLength(ErrorMsg, Len + 1);
     glGetShaderInfoLog(Result, Len, nil, @ErrorMsg[0]);
     for I := 0 to Len do
       S := S + (String(ErrorMsg[I]));
-    WritelnLog('TCastle2DParticleEmitterGPU', S);
+    WritelnWarning('TCastle2DParticleEmitterGPU', S);
   end;
 end;
 
@@ -477,6 +482,8 @@ begin
   glDeleteProgram(Self.ShaderProg);
   glDeleteProgram(Self.ShaderTFProg);
   glFreeTexture(Self.Texture);
+  if Assigned(FEffect) then
+    FEffect.Free;
   inherited;
 end;
 
@@ -587,6 +594,17 @@ begin
   end else
     AEffect.Clone(Self.FEffect);
   Self.RefreshEffect;
+end;
+
+procedure TCastle2DParticleEmitterGPU.LoadPEX(const AURL: String);
+begin
+  Self.LoadEffect(AURL);
+end;
+
+procedure TCastle2DParticleEmitterGPU.LoadPEX(const AEffect: TCastle2DParticleEffect;
+    const AOwnEffect: Boolean = true);
+begin
+  Self.LoadEffect(AEffect, AOwnEffect);
 end;
 
 procedure TCastle2DParticleEmitterGPU.RefreshEffect;
