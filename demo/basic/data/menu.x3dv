@@ -132,7 +132,7 @@ Transform {
           appearance USE text_apr
           geometry Text {
             string [
-              "Jellyfish"
+              "Fireorb"
             ]
             fontStyle FontStyle {
               size 0.3
