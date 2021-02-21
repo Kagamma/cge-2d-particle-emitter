@@ -1,0 +1,40 @@
+<particleEmitterConfig>
+    <yCoordFlipped value="1"></yCoordFlipped>
+    <sourcePosition x="150.00" y="50.00"></sourcePosition>
+    <sourcePositionVariance x="7.00" y="7.00"></sourcePositionVariance>
+    <speed value="98.00"></speed> 
+    <speedVariance value="211.00"></speedVariance>
+    <particleLifeSpan value="3.0000"></particleLifeSpan>
+    <particleLifespanVariance value="5.0000"></particleLifespanVariance>
+    <angle value="357.00"></angle>
+    <angleVariance value="190.00"></angleVariance>
+    <gravity x="0.70" y="1.43"></gravity>
+    <radialAcceleration value="0.00"></radialAcceleration>
+    <tangentialAcceleration value="0.00"></tangentialAcceleration>
+    <radialAccelVariance value="0.00"></radialAccelVariance>
+    <tangentialAccelVariance value="0.00"></tangentialAccelVariance>
+    <startColor red="0.39" green="0.47" blue="0.65" alpha="0.76"></startColor>
+    <startColorVariance red="0.42" green="0.75" blue="0.88" alpha="0.08"></startColorVariance>
+    <finishColor red="0.83" green="0.87" blue="0.49" alpha="0.57"></finishColor>
+    <finishColorVariance red="0.45" green="0.51" blue="0.26" alpha="0.46"></finishColorVariance>
+    <maxParticles value="300"></maxParticles>
+    <startParticleSize value="49.00"></startParticleSize>
+    <startParticleSizeVariance value="60.00"></startParticleSizeVariance>
+    <finishParticleSize value="31.00"></finishParticleSize>
+    <finishParticleSizeVariance value="0.00"></finishParticleSizeVariance>
+    <duration value="-1.00"></duration>
+    <emitterType value="0"></emitterType>
+    <maxRadius value="141.83"></maxRadius>
+    <maxRadiusVariance value="0.00"></maxRadiusVariance>
+    <minRadius value="118.82"></minRadius>
+    <minRadiusVariance value="0.00"></minRadiusVariance>
+    <rotatePerSecond value="0.00"></rotatePerSecond>
+    <rotatePerSecondVariance value="360.00"></rotatePerSecondVariance>
+    <blendFuncSource value="770"></blendFuncSource>
+    <blendFuncDestination value="772"></blendFuncDestination>
+    <rotationStart value="0.00"></rotationStart>
+    <rotationStartVariance value="0.00"></rotationStartVariance>
+    <rotationEnd value="0.00"></rotationEnd>
+    <rotationEndVariance value="0.00"></rotationEndVariance>
+    <texture name="trippy.png"/>
+</particleEmitterConfig>

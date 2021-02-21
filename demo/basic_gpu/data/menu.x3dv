@@ -1,0 +1,241 @@
+#X3D V3.3 utf8
+PROFILE Interchange
+
+Transform {
+  translation 400 240 0
+  scale 120 120 1
+  children [
+    Shape {
+      appearance Appearance {
+        material DEF fire_mat Material { 
+          diffuseColor 0 0 0 
+          specularColor 0 0 0          
+          ambientIntensity 0
+          emissiveColor 0.2 0.2 0.5 
+        } 
+        texture DEF btn_tex ImageTexture {
+          url "btn_bar.png"
+          repeatS FALSE
+          repeatT FALSE
+        }
+      }
+      geometry DEF btn_geo QuadSet {
+        solid FALSE
+        coord Coordinate {
+          point [
+            -1.2 -0.4 0,
+            1.2 -0.4 0,
+            1.2 0.4 0,
+            -1.2 0.4 0,
+          ]
+        }
+        texCoord TextureCoordinate {
+          point [
+            0 0,
+            1 0,
+            1 1,
+            0 1,
+          ]
+        }
+      }   
+    }  
+    Collision {
+      enabled FALSE
+      children Transform {
+        translation 0 -0.1 0.01
+        children Shape {
+          appearance DEF text_apr Appearance {
+            material Material {             
+              diffuseColor 0 0 0 
+              specularColor 0 0 0          
+              ambientIntensity 0
+              emissiveColor 1 1 1
+            } 
+          }
+          geometry Text {
+            string [
+              "Fire"
+            ]
+            fontStyle FontStyle {
+              size 0.3
+              justify "MIDDLE"
+            }
+          }
+        }
+      }  
+    }  
+  DEF TouchFire TouchSensor { }
+  ]
+}
+
+Transform {
+  translation 400 80 0
+  scale 120 120 1
+  children [
+    Shape {
+      appearance Appearance {
+        material DEF trippy_mat Material { 
+          diffuseColor 0 0 0 
+          specularColor 0 0 0          
+          ambientIntensity 0
+          emissiveColor 0.2 0.2 0.5 
+        } 
+        texture USE btn_tex
+      }
+      geometry USE btn_geo
+    }  
+    Collision {
+      enabled FALSE 
+      children
+        Transform {
+          translation 0 -0.1 0.01
+          children Shape {
+          appearance USE text_apr
+          geometry Text {
+            string [
+              "Trippy"
+            ]
+            fontStyle FontStyle {
+              size 0.3
+              justify "MIDDLE"
+            }
+          }
+        }
+      }  
+    }
+  DEF TouchTrippy TouchSensor { }
+  ]
+}
+
+Transform {
+  translation 400 -80 0
+  scale 120 120 1
+  children [
+    Shape {
+      appearance Appearance {
+        material DEF jellyfish_mat Material { 
+          diffuseColor 0 0 0 
+          specularColor 0 0 0          
+          ambientIntensity 0
+          emissiveColor 0.2 0.2 0.5 
+        } 
+        texture USE btn_tex
+      }
+      geometry USE btn_geo 
+    }  
+    Collision {
+      enabled FALSE 
+      children
+        Transform {
+          translation 0 -0.1 0.01
+          children Shape {
+          appearance USE text_apr
+          geometry Text {
+            string [
+              "Jellyfish"
+            ]
+            fontStyle FontStyle {
+              size 0.3
+              justify "MIDDLE"
+            }
+          }
+        }
+      }  
+    }
+  DEF TouchJellyFish TouchSensor { }
+  ]
+}
+
+Transform {
+  translation 400 -240 0
+  scale 120 120 1
+  children [
+    Shape {
+      appearance Appearance {
+        material DEF spiral_mat Material { 
+          diffuseColor 0 0 0 
+          specularColor 0 0 0          
+          ambientIntensity 0
+          emissiveColor 0.2 0.2 0.5 
+        } 
+        texture USE btn_tex
+      }
+      geometry USE btn_geo
+    }  
+    Collision {
+      enabled FALSE 
+      children
+        Transform {
+          translation 0 -0.1 0.01
+          children Shape {
+          appearance USE text_apr
+          geometry Text {
+            string [
+              "Spiral"
+            ]
+            fontStyle FontStyle {
+              size 0.3
+              justify "MIDDLE"
+            }
+          }
+        }
+      }  
+    }  
+  DEF TouchSpiral TouchSensor { }
+  ]
+}
+
+DEF S Script {
+  inputOnly SFTime fire_effect
+  inputOnly SFTime trippy_effect
+  inputOnly SFTime jellyfish_effect
+  inputOnly SFTime spiral_effect
+  url "compiled:
+fire_effect
+trippy_effect
+jellyfish_effect
+spiral_effect
+  "
+}
+
+DEF SS Script {
+  inputOnly SFBool fire_over
+  inputOnly SFBool trippy_over
+  inputOnly SFBool jellyfish_over
+  inputOnly SFBool spiral_over
+  
+  inputOutput SFColor fire_color 0.2 0.2 0.5
+  inputOutput SFColor trippy_color 0.2 0.2 0.5
+  inputOutput SFColor jellyfish_color 0.2 0.2 0.5
+  inputOutput SFColor spiral_color 0.2 0.2 0.5
+  
+  initializeOnly SFInt32 a 0
+  url "castlescript:
+    function fire_over(value, timestamp)
+      vector_set(fire_color, 2, float(value)/2 + 0.5)
+     
+    function trippy_over(value, timestamp)
+      vector_set(trippy_color, 2, float(value)/2 + 0.5)
+     
+    function jellyfish_over(value, timestamp)
+      vector_set(jellyfish_color, 2, float(value)/2 + 0.5)
+     
+    function spiral_over(value, timestamp)
+      vector_set(spiral_color, 2, float(value)/2 + 0.5)
+  "
+}
+
+ROUTE TouchFire.touchTime TO S.fire_effect
+ROUTE TouchTrippy.touchTime TO S.trippy_effect
+ROUTE TouchJellyFish.touchTime TO S.jellyfish_effect
+ROUTE TouchSpiral.touchTime TO S.spiral_effect
+
+ROUTE TouchFire.isOver TO SS.fire_over
+ROUTE TouchTrippy.isOver TO SS.trippy_over
+ROUTE TouchJellyFish.isOver TO SS.jellyfish_over
+ROUTE TouchSpiral.isOver TO SS.spiral_over
+
+ROUTE SS.fire_color TO fire_mat.emissiveColor 
+ROUTE SS.trippy_color TO trippy_mat.emissiveColor 
+ROUTE SS.jellyfish_color TO jellyfish_mat.emissiveColor 
+ROUTE SS.spiral_color TO spiral_mat.emissiveColor
