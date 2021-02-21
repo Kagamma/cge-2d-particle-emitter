@@ -7,10 +7,9 @@ unit Castle2DParticleEmitterGPU;
 interface
 
 uses
-  Classes, SysUtils,
-  GL, GLExt,
-  CastleTransform, CastleScene, CastleSceneCore, Castle2DSceneManager, CastleComponentSerialize,
-  CastleVectors, castlerendercontext, Generics.Collections, CastleGLImages, CastleLog,
+  Classes, SysUtils, GL, GLExt,
+  CastleTransform, CastleSceneCore, CastleComponentSerialize,
+  CastleVectors, castleRenderContext, Generics.Collections, CastleGLImages, CastleLog,
   Castle2DParticleEmitter,
   X3DNodes;
 
@@ -76,8 +75,7 @@ type
     FCountdownTillRemove,
     { The value is in miliseconds. Set it to -1 for infinite emitting, 0 to
       stop the emitter and positive value for cooldown. }
-    FEmissionTime,
-    FEmitParticleTime: Single;
+    FEmissionTime: Single;
     { When this is set to true, the emitter will automatically freed after
       all particles destroyed. }
     FReleaseWhenDone: Boolean;
@@ -342,7 +340,7 @@ const
 
 'void main() {'nl
 '  outColor = texture(baseColor, fragTexCoord) * fragColor;'nl
-'  outColor.rgb = outColor.rgb * outColor.a;'nl
+'  outColor.rgb *= outColor.a;'nl
 '}';
 
   Varyings: array[0..10] of PChar = (
@@ -596,7 +594,6 @@ var
   I: Integer;
 begin
   Self.FEmissionTime := Self.FEffect.Duration;
-  Self.FEmitParticleTime := 0;
   Self.FParticleCount := Self.FEffect.MaxParticles;
   Self.FCountdownTillRemove := Self.FEffect.ParticleLifeSpan + Self.FEffect.ParticleLifeSpanVariance;
   SetLength(Self.Particles, Self.FEffect.MaxParticles);
@@ -658,6 +655,7 @@ begin
     begin
       TimeToLive := -Random * (Self.FEffect.ParticleLifeSpan + Self.FEffect.ParticleLifeSpanVariance * (Random * 2 - 1));
       Position := Vector2(Random, Random);
+      // Take advantage of unused RadialAcceleration for initial seed
       RadialAcceleration := Random;
     end;
   end;

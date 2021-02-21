@@ -458,7 +458,7 @@ begin
   P^.EmitRotation := FEffect.Angle + FEffect.AngleVariance * (Random * 2 - 1);
   P^.EmitRotationDelta := FEffect.RotatePerSecond + FEffect.RotatePerSecondVariance * (Random * 2 - 1);
 
-  P^.RadialAcceleration := FEffect.RadialAcceleration + FEffect.RadialAccelVariance * (Random * 2 - 1);
+ // P^.RadialAcceleration := FEffect.RadialAcceleration + FEffect.RadialAccelVariance * (Random * 2 - 1);
   P^.TangentialAcceleration := FEffect.TangentialAcceleration + FEffect.TangentialAccelVariance * (Random * 2 - 1);
 
   StartSize := Max(0.1, FEffect.StartParticleSize + FEffect.StartParticleSizeVariance * (Random * 2 - 1));
