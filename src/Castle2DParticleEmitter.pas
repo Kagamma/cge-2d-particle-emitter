@@ -125,9 +125,7 @@ type
     { This method will free the current Effect if any, init a new FEffect and
       load settings from .PEX file. }
     procedure LoadEffect(const AURL: String); overload;
-    { If AOwnEffect = false we will remove old Effect and replace it with
-      AEffect, otherwise we will clone AEffect attributes to Effect (auto-init
-      if needed). }
+    { If AOwnEffect = true the effect will be freed once emitter is freed. }
     procedure LoadEffect(const AEffect: TCastle2DParticleEffect;
         const AOwnEffect: Boolean = true); overload;
 
