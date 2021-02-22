@@ -4,10 +4,18 @@ unit Castle2DParticleEmitterGPU;
 {$macro on}
 {$define nl:=+ LineEnding +}
 
+{$ifdef ANDROID}{$define GLES}{$endif}
+{$ifdef iOS}{$define GLES}{$endif}
+
 interface
 
 uses
-  Classes, SysUtils, GL, GLExt,
+  Classes, SysUtils,
+  {$ifdef GLES}
+  CastleGLES20, // This wont work. We need GLES3 header
+  {$else}
+  GL, GLExt,
+  {$endif}
   CastleTransform, CastleSceneCore, CastleComponentSerialize,
   CastleVectors, castleRenderContext, Generics.Collections, CastleGLImages, CastleLog,
   Castle2DParticleEmitter,
@@ -79,6 +87,7 @@ type
     { When this is set to true, the emitter will automatically freed after
       all particles destroyed. }
     FReleaseWhenDone: Boolean;
+    FOwnEffect: Boolean;
     FPosition: TVector2;
     procedure SetStartEmitting(V: Boolean);
   public
@@ -94,14 +103,14 @@ type
       AEffect, otherwise we will clone AEffect attributes to Effect (auto-init
       if needed). }
     procedure LoadEffect(const AEffect: TCastle2DParticleEffect;
-        const AOwnEffect: Boolean = true); overload;
+        const AOwnEffect: Boolean = True); overload;
     { Refresh the emitter according to the change from effect. Normally we dont
       need to explicitly call it unless we make changes in Effect's Texture,
       Duration, BlendFunc and/or MaxParticles. }
 
     procedure LoadPEX(const AURL: String); overload; deprecated 'Use LoadEffect';
     procedure LoadPEX(const AEffect: TCastle2DParticleEffect;
-        const AOwnEffect: Boolean = true); overload; deprecated 'Use LoadEffect';
+        const AOwnEffect: Boolean = True); overload; deprecated 'Use LoadEffect';
 
     procedure RefreshEffect;
 
@@ -470,6 +479,7 @@ begin
   Self.Texture := 0;
   Self.FSecondsPassed := 0;
   Self.FPosition := Vector2(0, 0);
+  Self.FOwnEffect := False;
 end;
 
 destructor TCastle2DParticleEmitterGPU.Destroy;
@@ -482,7 +492,7 @@ begin
   glDeleteProgram(Self.ShaderProg);
   glDeleteProgram(Self.ShaderTFProg);
   glFreeTexture(Self.Texture);
-  if Assigned(FEffect) then
+  if Self.FOwnEffect and Assigned(FEffect) then
     FEffect.Free;
   inherited;
 end;
@@ -575,25 +585,23 @@ end;
 
 procedure TCastle2DParticleEmitterGPU.LoadEffect(const AURL: String);
 begin
-  if Assigned(Self.FEffect) then
-    FreeAndNil(Self.FEffect);
-  Self.FEffect := TCastle2DParticleEffect.Create;
-  Self.FEffect.Load(AURL);
-  Self.FURL := AURL;
-  Self.RefreshEffect;
+  if Self.FOwnEffect and Assigned(FEffect) then
+    FreeAndNil(FEffect);
+  FEffect := TCastle2DParticleEffect.Create;
+  FEffect.Load(AURL);
+  FURL := AURL;
+  Self.FOwnEffect := True;
+  RefreshEffect;
 end;
 
 procedure TCastle2DParticleEmitterGPU.LoadEffect(const AEffect: TCastle2DParticleEffect;
-    const AOwnEffect: Boolean = true);
+    const AOwnEffect: Boolean = True);
 begin
-  if AOwnEffect then
-  begin
-    if Assigned(Self.FEffect) then
-      FreeAndNil(Self.FEffect);
-    Self.FEffect := AEffect;
-  end else
-    AEffect.Clone(Self.FEffect);
-  Self.RefreshEffect;
+  if Self.FOwnEffect and Assigned(FEffect) then
+    FreeAndNil(FEffect);
+  FEffect := AEffect;
+  Self.FOwnEffect := AOwnEffect;
+  RefreshEffect;
 end;
 
 procedure TCastle2DParticleEmitterGPU.LoadPEX(const AURL: String);
@@ -602,7 +610,7 @@ begin
 end;
 
 procedure TCastle2DParticleEmitterGPU.LoadPEX(const AEffect: TCastle2DParticleEffect;
-    const AOwnEffect: Boolean = true);
+    const AOwnEffect: Boolean = True);
 begin
   Self.LoadEffect(AEffect, AOwnEffect);
 end;

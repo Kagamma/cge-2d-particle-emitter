@@ -113,6 +113,7 @@ type
       all particles destroyed. }
     FReleaseWhenDone: Boolean;
     FPosition: TVector2;
+    FOwnEffect: Boolean;
 
     function EmitParticle: Boolean;
     procedure UpdateParticle(const P: PCastle2DParticle; ATimeStep: Single);
@@ -368,12 +369,13 @@ begin
   FParticleList := TCastle2DParticleList.Create;
   FEmitParticleTime := 0;
   FReleaseWhenDone := false;
+  Self.FOwnEffect := False;
   Self.FPosition := Vector2(0, 0);
 end;
 
 destructor TCastle2DParticleEmitter.Destroy;
 begin
-  if Assigned(FEffect) then
+  if Self.FOwnEffect and Assigned(FEffect) then
     FEffect.Free;
   FParticleList.Free;
   inherited;
@@ -381,25 +383,22 @@ end;
 
 procedure TCastle2DParticleEmitter.LoadEffect(const AURL: String);
 begin
-  if Assigned(FEffect) then
+  if Self.FOwnEffect and Assigned(FEffect) then
     FreeAndNil(FEffect);
   FEffect := TCastle2DParticleEffect.Create;
   FEffect.Load(AURL);
   FURL := AURL;
+  Self.FOwnEffect := True;
   RefreshEffect;
 end;
 
 procedure TCastle2DParticleEmitter.LoadEffect(const AEffect: TCastle2DParticleEffect;
-    const AOwnEffect: Boolean = true);
+    const AOwnEffect: Boolean = True);
 begin
-  if AOwnEffect then
-  begin
-    if Assigned(FEffect) then
-      FreeAndNil(FEffect);
-    FEffect := AEffect;
-  end
-  else
-    AEffect.Clone(FEffect);
+  if Self.FOwnEffect and Assigned(FEffect) then
+    FreeAndNil(FEffect);
+  FEffect := AEffect;
+  Self.FOwnEffect := AOwnEffect;
   RefreshEffect;
 end;
 
