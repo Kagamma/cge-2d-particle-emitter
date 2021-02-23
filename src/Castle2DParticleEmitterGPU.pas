@@ -335,14 +335,14 @@ const
 'uniform mat4 mvpMatrix;'nl
 
 'void main() {'nl
-'  mat4 instMatrix = mat4('nl
-'    vec4(geomInstanced[0].zw, 0.0, 0.0),'nl
-'    vec4(-geomInstanced[0].w, geomInstanced[0].z, 0.0, 0.0),'nl
-'    vec4(0.0),'nl
-'    vec4(geomInstanced[0].xy, 0.0, 1.0)'nl
-'  );'nl
-'  mat4 m = mvpMatrix * instMatrix;'nl
 '  if (geomTimeToLive[0] > 0.0) {'nl
+'    mat4 instMatrix = mat4('nl
+'      vec4(geomInstanced[0].zw, 0.0, 0.0),'nl
+'      vec4(-geomInstanced[0].w, geomInstanced[0].z, 0.0, 0.0),'nl
+'      vec4(0.0),'nl
+'      vec4(geomInstanced[0].xy, 0.0, 1.0)'nl
+'    );'nl
+'    mat4 m = mvpMatrix * instMatrix;'nl
 '    fragColor = geomColor[0];'nl
 
 '    float s = sin(geomRotation[0].x);'nl
