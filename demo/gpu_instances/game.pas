@@ -68,7 +68,7 @@ begin
     for I := 0 to RING_ITEM - 1 do
     begin
       F := G + I * PI * 2 / RING_ITEM;
-      Instances[I + J * RING_ITEM].Translation := Vector2(Cos(F) * J * 30 + 40, Sin(F) * J * 30 + 40);
+      Instances[I + J * RING_ITEM].Translation := Vector2(Cos(F) * J * 30, Sin(F) * J * 30);
       Instances[I + J * RING_ITEM].Rotation := F - PI;
     end;
     G := G + 0.05;
