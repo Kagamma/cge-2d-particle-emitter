@@ -444,8 +444,8 @@ begin
     // Check maximum number of vertices
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, @V);
     WritelnLog('GL_MAX_VERTEX_ATTRIBS: ' + IntToStr(V));
-    if V < 11 then
-      WritelnWarning('TCastle2DParticleEmitterGPU', 'TCastle2DParticleEmitterGPU requires GL_MAX_VERTEX_ATTRIBS at least 11');
+    if V < 12 then
+      WritelnWarning('TCastle2DParticleEmitterGPU', 'TCastle2DParticleEmitterGPU requires GL_MAX_VERTEX_ATTRIBS at least 12');
     // Drawing shader
     Self.ShaderVert := LoadShader(GL_VERTEX_SHADER, PChar(VertexShaderSource));
     Self.ShaderGeom := LoadShader(GL_GEOMETRY_SHADER, PChar(GeometryShaderSource));
