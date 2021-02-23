@@ -655,10 +655,14 @@ procedure TCastle2DParticleEmitterGPU.SetInstanced(const V: TCastle2DParticleIns
 var
   I, Len: Integer;
   SX, SY: Single;
+  IsEqualSize: Boolean = True;
 begin
   Len := Length(V);
   if Len <> Length(Self.FInstanced) then
+  begin
     SetLength(Self.FInstanced, Len);
+    IsEqualSize := False;
+  end;
   SX := Sign(Self.Scale.X);
   SY := Sign(Self.Scale.Y);
   for I := 0 to Len - 1 do
@@ -669,7 +673,10 @@ begin
   end;
 
   glBindBuffer(GL_ARRAY_BUFFER, Self.VBOInstanced);
-  glBufferData(GL_ARRAY_BUFFER, Len * SizeOf(TCastle2DParticleInstanceGPU), @Self.FInstanced[0], GL_STATIC_DRAW);
+  if IsEqualSize then
+    glBufferData(GL_ARRAY_BUFFER, Len * SizeOf(TCastle2DParticleInstanceGPU), @Self.FInstanced[0], GL_STATIC_DRAW)
+  else
+    glBufferSubData(GL_ARRAY_BUFFER, 0, Len * SizeOf(TCastle2DParticleInstanceGPU), @Self.FInstanced[0]);
 end;
 
 procedure TCastle2DParticleEmitterGPU.RefreshEffect;
