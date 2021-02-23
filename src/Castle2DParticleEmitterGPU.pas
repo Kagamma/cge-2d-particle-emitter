@@ -17,11 +17,23 @@ uses
   GL, GLExt,
   {$endif}
   CastleTransform, CastleSceneCore, CastleComponentSerialize,
-  CastleVectors, castleRenderContext, Generics.Collections, CastleGLImages, CastleLog,
+  CastleVectors, CastleRenderContext, Generics.Collections, CastleGLImages, CastleLog,
   Castle2DParticleEmitter,
   X3DNodes;
 
 type
+  TCastle2DParticleInstanceGPU = packed record
+    Translation,
+    Rotation: TVector2;
+  end;
+  TCastle2DParticleInstanceGPUArray = packed array of TCastle2DParticleInstanceGPU;
+
+  TCastle2DParticleInstance = record
+    Translation: TVector2;
+    Rotation: Single;
+  end;
+  TCastle2DParticleInstanceArray = array of TCastle2DParticleInstance;
+
   TCastle2DParticleEmitterGPU = class(TCastleSceneCore)
   public
     class var ShaderVert: GLuint;
@@ -70,8 +82,9 @@ type
 
     VAOs,
     VBOs: array[0..1] of GLuint;
+    VBOInstanced: GLUint;
     CurrentBuffer: GLuint;
-    Particles: array of TCastle2DParticle;
+    Particles: packed array of TCastle2DParticle;
 
     FURL: String;
     FStartEmitting: Boolean;
@@ -89,8 +102,11 @@ type
     FReleaseWhenDone: Boolean;
     FOwnEffect: Boolean;
     FPosition: TVector2;
+    { Set this to fast-drawing (instancing) the same particles at multiple positions. The position is relative to Translation }
+    FInstanced: TCastle2DParticleInstanceGPUArray;
     procedure SetStartEmitting(V: Boolean);
   public
+
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure Update(const SecondsPassed: Single; var RemoveMe: TRemoveType); override;
@@ -111,6 +127,7 @@ type
         const AOwnEffect: Boolean = True); overload; deprecated 'Use LoadEffect';
 
     procedure RefreshEffect;
+    procedure SetInstanced(const V: TCastle2DParticleInstanceArray);
 
     property Effect: TCastle2DParticleEffect read FEffect;
     property ParticleCount: Integer read FParticleCount;
@@ -284,11 +301,13 @@ const
 'layout(location = 2) in vec2 inSize;'nl
 'layout(location = 3) in vec2 inRotation;'nl
 'layout(location = 4) in vec4 inColor;'nl
+'layout(location = 11) in vec4 inInstanced;'nl
 
 'out float geomTimeToLive;'nl
 'out vec2 geomSize;'nl
 'out vec2 geomRotation;'nl
 'out vec4 geomColor;'nl
+'out vec4 geomInstanced;'nl
 
 'void main() {'nl
 '  gl_Position = vec4(inPosition, 0.0, 1.0);'nl
@@ -296,6 +315,7 @@ const
 '  geomSize = inSize;'nl
 '  geomRotation = inRotation;'nl
 '  geomColor = inColor;'nl
+'  geomInstanced = inInstanced;'nl
 '}';
 
   GeometryShaderSource: String =
@@ -307,6 +327,7 @@ const
 'in vec2 geomSize[];'nl
 'in vec2 geomRotation[];'nl
 'in vec4 geomColor[];'nl
+'in vec4 geomInstanced[];'nl
 
 'out vec2 fragTexCoord;'nl
 'out vec4 fragColor;'nl
@@ -314,6 +335,13 @@ const
 'uniform mat4 mvpMatrix;'nl
 
 'void main() {'nl
+'  mat4 instMatrix = mat4('nl
+'    vec4(geomInstanced[0].zw, 0.0, 0.0),'nl
+'    vec4(-geomInstanced[0].w, geomInstanced[0].z, 0.0, 0.0),'nl
+'    vec4(0.0),'nl
+'    vec4(geomInstanced[0].xy, 0.0, 1.0)'nl
+'  );'nl
+'  mat4 m = mvpMatrix * instMatrix;'nl
 '  if (geomTimeToLive[0] > 0.0) {'nl
 '    fragColor = geomColor[0];'nl
 
@@ -323,16 +351,16 @@ const
 '    float ssub = (c - s) * geomSize[0].x * 0.5;'nl
 '    vec2 p = gl_in[0].gl_Position.xy;'nl
 
-'    gl_Position = mvpMatrix * vec4(p.x - ssub, p.y - sadd, 0.0, 1.0);'nl
+'    gl_Position = m * vec4(p.x - ssub, p.y - sadd, 0.0, 1.0);'nl
 '    fragTexCoord = vec2(0.0, 1.0);'nl
 '    EmitVertex();'nl
-'    gl_Position = mvpMatrix * vec4(p.x - sadd, p.y + ssub, 0.0, 1.0);'nl
+'    gl_Position = m * vec4(p.x - sadd, p.y + ssub, 0.0, 1.0);'nl
 '    fragTexCoord = vec2(0.0, 0.0);'nl
 '    EmitVertex();'nl
-'    gl_Position = mvpMatrix * vec4(p.x + sadd, p.y - ssub, 0.0, 1.0);'nl
+'    gl_Position = m * vec4(p.x + sadd, p.y - ssub, 0.0, 1.0);'nl
 '    fragTexCoord = vec2(1.0, 1.0);'nl
 '    EmitVertex();'nl
-'    gl_Position = mvpMatrix * vec4(p.x + ssub, p.y + sadd, 0.0, 1.0);'nl
+'    gl_Position = m * vec4(p.x + ssub, p.y + sadd, 0.0, 1.0);'nl
 '    fragTexCoord = vec2(1.0, 0.0);'nl
 '    EmitVertex();'nl
 
@@ -478,15 +506,20 @@ begin
   Self.FSecondsPassed := 0;
   Self.FPosition := Vector2(0, 0);
   Self.FOwnEffect := False;
+  Self.Scale := Vector3(1, -1, 1);
+  SetLength(FInstanced, 1);
+  FInstanced[0].Translation := Vector2(0, 0);
+  FInstanced[0].Rotation := Vector2(1, 0);
+  glGenBuffers(1, @Self.VBOInstanced);
+  glGenBuffers(2, @Self.VBOs);
+  glGenVertexArrays(2, @Self.VAOs);
 end;
 
 destructor TCastle2DParticleEmitterGPU.Destroy;
 begin
-  if Self.VAOs[0] <> 0 then
-  begin
-    glDeleteBuffers(2, @Self.VBOs);
-    glDeleteVertexArrays(2, @Self.VAOs);
-  end;
+  glDeleteBuffers(1, @Self.VBOInstanced);
+  glDeleteBuffers(2, @Self.VBOs);
+  glDeleteVertexArrays(2, @Self.VAOs);
   glDeleteProgram(Self.ShaderProg);
   glDeleteProgram(Self.ShaderTFProg);
   glFreeTexture(Self.Texture);
@@ -530,6 +563,7 @@ procedure TCastle2DParticleEmitterGPU.LocalRender(const Params: TRenderParams);
 var
   M: TMatrix4;
   PrevShader: GLuint;
+  InstanceCount: Integer;
 begin
   inherited;
 
@@ -543,6 +577,10 @@ begin
     Exit;
 
   if (not Self.FStartEmitting) and (Self.FCountdownTillRemove <= 0) then
+    Exit;
+
+  InstanceCount := Length(Self.FInstanced);
+  if InstanceCount = 0 then
     Exit;
 
   M := RenderContext.ProjectionMatrix * Params.RenderingCamera.Matrix * Params.Transform^;
@@ -572,7 +610,7 @@ begin
   glBindVertexArray(Self.VAOs[CurrentBuffer]);
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, Self.Texture);
-  glDrawArrays(GL_POINTS, 0, Self.FEffect.MaxParticles);
+  glDrawArraysInstanced(GL_POINTS, 0, Self.FEffect.MaxParticles, InstanceCount);
   glBindTexture(GL_TEXTURE_2D, 0);
   glBindVertexArray(0);
   glUseProgram(PrevShader);
@@ -613,6 +651,25 @@ begin
   Self.LoadEffect(AEffect, AOwnEffect);
 end;
 
+procedure TCastle2DParticleEmitterGPU.SetInstanced(const V: TCastle2DParticleInstanceArray);
+var
+  I: Integer;
+  SX, SY: Single;
+begin
+  SetLength(Self.FInstanced, Length(V));
+  SX := Sign(Self.Scale.X);
+  SY := Sign(Self.Scale.Y);
+  for I := 0 to Length(V) - 1 do
+  begin
+    Self.FInstanced[I].Translation.X := SX * V[I].Translation.X;
+    Self.FInstanced[I].Translation.Y := SY * V[I].Translation.Y;
+    Self.FInstanced[I].Rotation := Vector2(SX * Cos(V[I].Rotation), SY * Sin(V[I].Rotation));
+  end;
+
+  glBindBuffer(GL_ARRAY_BUFFER, Self.VBOInstanced);
+  glBufferData(GL_ARRAY_BUFFER, Length(Self.FInstanced) * SizeOf(TCastle2DParticleInstanceGPU), @Self.FInstanced[0], GL_STATIC_DRAW);
+end;
+
 procedure TCastle2DParticleEmitterGPU.RefreshEffect;
 var
   I: Integer;
@@ -632,12 +689,6 @@ begin
     Texture2DClampToEdge
   );
 
-  // Cleanup current VAOs & VBOs
-  if Self.VAOs[0] <> 0 then
-  begin
-    glDeleteBuffers(2, @Self.VBOs);
-    glDeleteVertexArrays(2, @Self.VAOs);
-  end;
   // Transfer effect settings to shader
   glUseProgram(Self.ShaderTFProg);
     glUniform2fv(Self.UniformSourcePosition, 1, @Self.FEffect.SourcePosition);
@@ -683,10 +734,12 @@ begin
       RadialAcceleration := Random;
     end;
   end;
+  // Instance VBO
+  glBindBuffer(GL_ARRAY_BUFFER, Self.VBOInstanced);
+  glBufferData(GL_ARRAY_BUFFER, Length(Self.FInstanced) * SizeOf(TCastle2DParticleInstanceGPU), @Self.FInstanced[0], GL_STATIC_DRAW);
+
   // Drawing VAO
   Self.CurrentBuffer := 0;
-  glGenVertexArrays(2, @Self.VAOs);
-  glGenBuffers(2, @Self.VBOs);
   for I := 0 to 1 do
   begin
     glBindVertexArray(Self.VAOs[I]);
@@ -716,6 +769,11 @@ begin
     glVertexAttribPointer(8, 2, GL_FLOAT, GL_FALSE, SizeOf(TCastle2DParticle), Pointer(76));
     glVertexAttribPointer(9, 2, GL_FLOAT, GL_FALSE, SizeOf(TCastle2DParticle), Pointer(84));
     glVertexAttribPointer(10, 2, GL_FLOAT, GL_FALSE, SizeOf(TCastle2DParticle), Pointer(92));
+
+    glBindBuffer(GL_ARRAY_BUFFER, Self.VBOInstanced);
+    glEnableVertexAttribArray(11);
+    glVertexAttribPointer(11, 4, GL_FLOAT, GL_FALSE, SizeOf(TCastle2DParticleInstanceGPU), Pointer(0));
+    glVertexAttribDivisor(11, 1);
 
     glBindVertexArray(0);
   end;

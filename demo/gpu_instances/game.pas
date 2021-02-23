@@ -20,10 +20,15 @@ uses
   X3DTime, X3DFields,
   Castle2DParticleEmitter, Castle2DParticleEmitterGPU;
 
+const
+  RING_NUMBER = 10;
+  RING_ITEM = 10;
+
 var
   SceneManager: T2DSceneManager;
   Emitter: TCastle2DParticleEmitterGPU;
   T: Single;
+  Instances: packed array[0..RING_NUMBER * RING_ITEM - 1] of TCastle2DParticleInstance;
 
 procedure ApplicationInitialize;
 begin
@@ -39,7 +44,7 @@ begin
   Window.Controls.InsertFront(SceneManager);
 
   Emitter := TCastle2DParticleEmitterGPU.Create(SceneManager);
-  Emitter.LoadEffect(ApplicationData('spiral.pex'));
+  Emitter.LoadEffect(ApplicationData('fire.pex'));
   Emitter.StartEmitting := True;
 
   SceneManager.Items.Add(Emitter);
@@ -47,14 +52,28 @@ end;
 
 procedure WindowRender(Container: TUIContainer);
 begin
-  UIFont.Print(10, 40, Yellow, Format('Particle count: %d', [Emitter.ParticleCount]));
+  UIFont.Print(10, 40, Yellow, Format('%d emitter instances, for a total of %d particles', [RING_NUMBER * RING_ITEM, RING_NUMBER * RING_ITEM* Emitter.ParticleCount]));
   UIFont.Print(10, 10, Yellow, Format('FPS: %s', [Container.Fps.ToString]));
 end;
 
 procedure WindowUpdate(Container: TUIContainer);
+var
+  I, J: Integer;
+  F, G: Single;
 begin
-  // Move emitter around
-  Emitter.Position := Vector2(Cos(T) * 250, Sin(T * 4) * 80);
+  // Instancing multiple particle emitters that share the same particles
+  G := T;
+  for J := 0 to RING_NUMBER - 1 do
+  begin
+    for I := 0 to RING_ITEM - 1 do
+    begin
+      F := G + I * PI * 2 / RING_ITEM;
+      Instances[I + J * RING_ITEM].Translation := Vector2(Cos(F) * J * 30 + 40, Sin(F) * J * 30 + 40);
+      Instances[I + J * RING_ITEM].Rotation := F - PI;
+    end;
+    G := G + 0.05;
+  end;
+  Emitter.SetInstanced(Instances);
   T := T + 0.01;
 end;
 

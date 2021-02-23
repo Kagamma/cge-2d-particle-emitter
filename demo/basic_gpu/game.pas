@@ -111,7 +111,6 @@ begin
 
   T := TCastleTransform.Create(SceneManager);
   T.Translation := Vector3(-213, 0, 0);
-  T.Scale := Vector3(1, -1, 1);
   Emitter := TCastle2DParticleEmitterGPU.Create(T);
   Emitter.LoadEffect(EffectFire, False);
   Emitter.StartEmitting := True;

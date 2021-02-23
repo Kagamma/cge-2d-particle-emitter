@@ -369,6 +369,7 @@ begin
   FReleaseWhenDone := false;
   Self.FOwnEffect := False;
   Self.FPosition := Vector2(0, 0);
+  Self.Scale := Vector3(1, -1, 1);
 end;
 
 destructor TCastle2DParticleEmitter.Destroy;
