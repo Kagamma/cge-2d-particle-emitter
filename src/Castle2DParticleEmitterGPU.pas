@@ -674,9 +674,9 @@ begin
 
   glBindBuffer(GL_ARRAY_BUFFER, Self.VBOInstanced);
   if IsEqualSize then
-    glBufferData(GL_ARRAY_BUFFER, Len * SizeOf(TCastle2DParticleInstanceGPU), @Self.FInstanced[0], GL_STATIC_DRAW)
+    glBufferSubData(GL_ARRAY_BUFFER, 0, Len * SizeOf(TCastle2DParticleInstanceGPU), @Self.FInstanced[0])
   else
-    glBufferSubData(GL_ARRAY_BUFFER, 0, Len * SizeOf(TCastle2DParticleInstanceGPU), @Self.FInstanced[0]);
+    glBufferData(GL_ARRAY_BUFFER, Len * SizeOf(TCastle2DParticleInstanceGPU), @Self.FInstanced[0], GL_STATIC_DRAW);
 end;
 
 procedure TCastle2DParticleEmitterGPU.RefreshEffect;
