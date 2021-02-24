@@ -127,7 +127,7 @@ type
         const AOwnEffect: Boolean = True); overload; deprecated 'Use LoadEffect';
 
     procedure RefreshEffect;
-    procedure SetInstanced(const V: TCastle2DParticleInstanceArray);
+    procedure SetInstances(const V: TCastle2DParticleInstanceArray);
 
     property Effect: TCastle2DParticleEffect read FEffect;
     property ParticleCount: Integer read FParticleCount;
@@ -651,7 +651,7 @@ begin
   Self.LoadEffect(AEffect, AOwnEffect);
 end;
 
-procedure TCastle2DParticleEmitterGPU.SetInstanced(const V: TCastle2DParticleInstanceArray);
+procedure TCastle2DParticleEmitterGPU.SetInstances(const V: TCastle2DParticleInstanceArray);
 var
   I, Len: Integer;
   SX, SY: Single;

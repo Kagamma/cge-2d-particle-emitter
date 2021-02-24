@@ -73,7 +73,7 @@ begin
     end;
     G := G + 0.05;
   end;
-  Emitter.SetInstanced(Instances);
+  Emitter.SetInstances(Instances);
   T := T + 0.01;
 end;
 
