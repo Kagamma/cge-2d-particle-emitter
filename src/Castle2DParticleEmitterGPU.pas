@@ -18,7 +18,7 @@ uses
   {$endif}
   CastleTransform, CastleSceneCore, CastleComponentSerialize,
   CastleVectors, CastleRenderContext, Generics.Collections, CastleGLImages, CastleLog,
-  Castle2DParticleEmitter,
+  Castle2DParticleEmitter, CastleUtils, CastleApplicationProperties,
   X3DNodes;
 
 type
@@ -104,13 +104,18 @@ type
     FPosition: TVector2;
     { Set this to fast-drawing (instancing) the same particles at multiple positions. The position is relative to Translation }
     FInstances: TCastle2DParticleInstanceGPUArray;
+    { Bypass GLContext problem }
+    FIsGLContextInitialized: Boolean;
+    FIsNeedRefresh: Boolean;
     procedure SetStartEmitting(V: Boolean);
+    procedure InternalRefreshEffect;
   public
-
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure Update(const SecondsPassed: Single; var RemoveMe: TRemoveType); override;
     procedure LocalRender(const Params: TRenderParams); override;
+    procedure GLContextOpen; virtual;
+    procedure GLContextClose; virtual;
 
     { This method will free the current Effect if any, init a new FEffect and
       load settings from .PEX file. }
@@ -433,11 +438,13 @@ begin
     Self.FCountdownTillRemove := Self.FEffect.ParticleLifeSpan + Self.FEffect.ParticleLifeSpanVariance;
 end;
 
-constructor TCastle2DParticleEmitterGPU.Create(AOwner: TComponent);
+procedure TCastle2DParticleEmitterGPU.GLContextOpen;
 var
   V: Integer;
 begin
-  inherited;
+  // Safeguard
+  if not ApplicationProperties.IsGLContextOpen then Exit;
+  if Self.FIsGLContextInitialized then Exit;
 
   if Self.ShaderVert = 0 then
   begin
@@ -501,36 +508,54 @@ begin
   Self.UniformRotationEndVariance := glGetUniformLocation(Self.ShaderTFProg, 'effect.rotationEndVariance');
   Self.UniformDeltaTime := glGetUniformLocation(Self.ShaderTFProg, 'deltaTime');
   Self.UniformEmissionTime := glGetUniformLocation(Self.ShaderTFProg, 'emissionTime');
-  Self.VAOs[0] := 0;
-  Self.Texture := 0;
-  Self.FSecondsPassed := 0;
-  Self.FPosition := Vector2(0, 0);
-  Self.FOwnEffect := False;
-  Self.Scale := Vector3(1, -1, 1);
-  SetLength(FInstances, 1);
-  FInstances[0].Translation := Vector2(0, 0);
-  FInstances[0].Rotation := Vector2(1, 0);
   glGenBuffers(1, @Self.VBOInstanced);
   glGenBuffers(2, @Self.VBOs);
   glGenVertexArrays(2, @Self.VAOs);
+  Self.FIsGLContextInitialized := True;
 end;
 
-destructor TCastle2DParticleEmitterGPU.Destroy;
+procedure TCastle2DParticleEmitterGPU.GLContextClose;
 begin
+  if not Self.FIsGLContextInitialized then Exit;
   glDeleteBuffers(1, @Self.VBOInstanced);
   glDeleteBuffers(2, @Self.VBOs);
   glDeleteVertexArrays(2, @Self.VAOs);
   glDeleteProgram(Self.ShaderProg);
   glDeleteProgram(Self.ShaderTFProg);
   glFreeTexture(Self.Texture);
+  Self.FIsGLContextInitialized := False;
+end;
+
+constructor TCastle2DParticleEmitterGPU.Create(AOwner: TComponent);
+begin
+  inherited;
+  Self.Texture := 0;
+  Self.FSecondsPassed := 0;
+  Self.FPosition := Vector2(0, 0);
+  Self.FOwnEffect := False;
+  Self.Scale := Vector3(1, -1, 1);
+  SetLength(FInstances, 1);
+  Self.FInstances[0].Translation := Vector2(0, 0);
+  Self.FInstances[0].Rotation := Vector2(1, 0);
+  Self.FIsGLContextInitialized := False;
+  Self.FIsNeedRefresh := False;
+end;
+
+destructor TCastle2DParticleEmitterGPU.Destroy;
+begin
   if Self.FOwnEffect and Assigned(FEffect) then
     FEffect.Free;
+  Self.GLContextClose;
   inherited;
 end;
 
 procedure TCastle2DParticleEmitterGPU.Update(const SecondsPassed: Single; var RemoveMe: TRemoveType);
 begin
   inherited;
+  Self.GLContextOpen;
+  if Self.FIsNeedRefresh then
+    Self.InternalRefreshEffect;
+
   Self.FSecondsPassed := SecondsPassed;
   Self.FIsDrawn := False;
 
@@ -567,7 +592,7 @@ var
 begin
   inherited;
 
-  if Self.VAOs[0] = 0 then
+  if not Self.FIsGLContextInitialized then
     Exit;
 
   // Why LocalRender get called 2 times in a frame?
@@ -657,6 +682,7 @@ var
   SX, SY: Single;
   IsEqualSize: Boolean = True;
 begin
+  Self.GLContextOpen;
   Len := Length(V);
   if Len <> Length(Self.FInstances) then
   begin
@@ -679,7 +705,7 @@ begin
     glBufferData(GL_ARRAY_BUFFER, Len * SizeOf(TCastle2DParticleInstanceGPU), @Self.FInstances[0], GL_STATIC_DRAW);
 end;
 
-procedure TCastle2DParticleEmitterGPU.RefreshEffect;
+procedure TCastle2DParticleEmitterGPU.InternalRefreshEffect;
 var
   I: Integer;
 begin
@@ -787,6 +813,12 @@ begin
     glBindVertexArray(0);
   end;
   SetLength(Self.Particles, 0);
+  Self.FIsNeedRefresh := False;
+end;
+
+procedure TCastle2DParticleEmitterGPU.RefreshEffect;
+begin
+  Self.FIsNeedRefresh := True;
 end;
 
 initialization
