@@ -103,7 +103,7 @@ type
     FOwnEffect: Boolean;
     FPosition: TVector2;
     { Set this to fast-drawing (instancing) the same particles at multiple positions. The position is relative to Translation }
-    FInstanced: TCastle2DParticleInstanceGPUArray;
+    FInstances: TCastle2DParticleInstanceGPUArray;
     procedure SetStartEmitting(V: Boolean);
   public
 
@@ -507,9 +507,9 @@ begin
   Self.FPosition := Vector2(0, 0);
   Self.FOwnEffect := False;
   Self.Scale := Vector3(1, -1, 1);
-  SetLength(FInstanced, 1);
-  FInstanced[0].Translation := Vector2(0, 0);
-  FInstanced[0].Rotation := Vector2(1, 0);
+  SetLength(FInstances, 1);
+  FInstances[0].Translation := Vector2(0, 0);
+  FInstances[0].Rotation := Vector2(1, 0);
   glGenBuffers(1, @Self.VBOInstanced);
   glGenBuffers(2, @Self.VBOs);
   glGenVertexArrays(2, @Self.VAOs);
@@ -579,7 +579,7 @@ begin
   if (not Self.FStartEmitting) and (Self.FCountdownTillRemove <= 0) then
     Exit;
 
-  InstanceCount := Length(Self.FInstanced);
+  InstanceCount := Length(Self.FInstances);
   if InstanceCount = 0 then
     Exit;
 
@@ -658,25 +658,25 @@ var
   IsEqualSize: Boolean = True;
 begin
   Len := Length(V);
-  if Len <> Length(Self.FInstanced) then
+  if Len <> Length(Self.FInstances) then
   begin
-    SetLength(Self.FInstanced, Len);
+    SetLength(Self.FInstances, Len);
     IsEqualSize := False;
   end;
   SX := Sign(Self.Scale.X);
   SY := Sign(Self.Scale.Y);
   for I := 0 to Len - 1 do
   begin
-    Self.FInstanced[I].Translation.X := SX * V[I].Translation.X;
-    Self.FInstanced[I].Translation.Y := SY * V[I].Translation.Y;
-    Self.FInstanced[I].Rotation := Vector2(SX * Cos(V[I].Rotation), SY * Sin(V[I].Rotation));
+    Self.FInstances[I].Translation.X := SX * V[I].Translation.X;
+    Self.FInstances[I].Translation.Y := SY * V[I].Translation.Y;
+    Self.FInstances[I].Rotation := Vector2(SX * Cos(V[I].Rotation), SY * Sin(V[I].Rotation));
   end;
 
   glBindBuffer(GL_ARRAY_BUFFER, Self.VBOInstanced);
   if IsEqualSize then
-    glBufferSubData(GL_ARRAY_BUFFER, 0, Len * SizeOf(TCastle2DParticleInstanceGPU), @Self.FInstanced[0])
+    glBufferSubData(GL_ARRAY_BUFFER, 0, Len * SizeOf(TCastle2DParticleInstanceGPU), @Self.FInstances[0])
   else
-    glBufferData(GL_ARRAY_BUFFER, Len * SizeOf(TCastle2DParticleInstanceGPU), @Self.FInstanced[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, Len * SizeOf(TCastle2DParticleInstanceGPU), @Self.FInstances[0], GL_STATIC_DRAW);
 end;
 
 procedure TCastle2DParticleEmitterGPU.RefreshEffect;
@@ -745,7 +745,7 @@ begin
   end;
   // Instance VBO
   glBindBuffer(GL_ARRAY_BUFFER, Self.VBOInstanced);
-  glBufferData(GL_ARRAY_BUFFER, Length(Self.FInstanced) * SizeOf(TCastle2DParticleInstanceGPU), @Self.FInstanced[0], GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, Length(Self.FInstances) * SizeOf(TCastle2DParticleInstanceGPU), @Self.FInstances[0], GL_STATIC_DRAW);
 
   // Drawing VAO
   Self.CurrentBuffer := 0;
