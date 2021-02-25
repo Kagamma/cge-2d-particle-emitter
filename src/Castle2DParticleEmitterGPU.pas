@@ -18,7 +18,7 @@ uses
   {$endif}
   CastleTransform, CastleSceneCore, CastleComponentSerialize,
   CastleVectors, CastleRenderContext, Generics.Collections, CastleGLImages, CastleLog,
-  Castle2DParticleEmitter, CastleUtils, CastleApplicationProperties,
+  Castle2DParticleEmitter, CastleUtils, CastleApplicationProperties, CastleGLShaders,
   X3DNodes;
 
 type
@@ -587,7 +587,7 @@ end;
 procedure TCastle2DParticleEmitterGPU.LocalRender(const Params: TRenderParams);
 var
   M: TMatrix4;
-  PrevShader: GLuint;
+  PreviousProgram: TGLSLProgram;
   InstanceCount: Integer;
 begin
   inherited;
@@ -611,7 +611,7 @@ begin
   M := RenderContext.ProjectionMatrix * Params.RenderingCamera.Matrix * Params.Transform^;
 
   // Update particles
-  glGetIntegerv(GL_CURRENT_PROGRAM, @PrevShader);
+  PreviousProgram := RenderContext.CurrentProgram;
   glEnable(GL_RASTERIZER_DISCARD);
   glUseProgram(Self.ShaderTFProg);
   glUniform1f(Self.UniformDeltaTime, Self.FSecondsPassed);
@@ -638,8 +638,13 @@ begin
   glDrawArraysInstanced(GL_POINTS, 0, Self.FEffect.MaxParticles, InstanceCount);
   glBindTexture(GL_TEXTURE_2D, 0);
   glBindVertexArray(0);
-  glUseProgram(PrevShader);
   glDisable(GL_BLEND);
+  // Enable the previous program
+  if PreviousProgram <> nil then
+  begin
+    PreviousProgram.Disable;
+    PreviousProgram.Enable;
+  end;
 
   CurrentBuffer := (CurrentBuffer + 1) mod 2;
 end;
@@ -783,26 +788,26 @@ begin
     glBufferData(GL_ARRAY_BUFFER, Self.FEffect.MaxParticles * SizeOf(TCastle2DParticle), @Self.Particles[0], GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
-    glEnableVertexAttribArray(3);
-    glEnableVertexAttribArray(4);
-    glEnableVertexAttribArray(5);
-    glEnableVertexAttribArray(6);
-    glEnableVertexAttribArray(7);
-    glEnableVertexAttribArray(8);
-    glEnableVertexAttribArray(9);
-    glEnableVertexAttribArray(10);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, SizeOf(TCastle2DParticle), Pointer(0));
+    glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, SizeOf(TCastle2DParticle), Pointer(8));
+    glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, SizeOf(TCastle2DParticle), Pointer(12));
+    glEnableVertexAttribArray(3);
     glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, SizeOf(TCastle2DParticle), Pointer(20));
+    glEnableVertexAttribArray(4);
     glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, SizeOf(TCastle2DParticle), Pointer(28));
+    glEnableVertexAttribArray(5);
     glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, SizeOf(TCastle2DParticle), Pointer(44));
+    glEnableVertexAttribArray(6);
     glVertexAttribPointer(6, 2, GL_FLOAT, GL_FALSE, SizeOf(TCastle2DParticle), Pointer(60));
+    glEnableVertexAttribArray(7);
     glVertexAttribPointer(7, 2, GL_FLOAT, GL_FALSE, SizeOf(TCastle2DParticle), Pointer(68));
+    glEnableVertexAttribArray(8);
     glVertexAttribPointer(8, 2, GL_FLOAT, GL_FALSE, SizeOf(TCastle2DParticle), Pointer(76));
+    glEnableVertexAttribArray(9);
     glVertexAttribPointer(9, 2, GL_FLOAT, GL_FALSE, SizeOf(TCastle2DParticle), Pointer(84));
+    glEnableVertexAttribArray(10);
     glVertexAttribPointer(10, 2, GL_FLOAT, GL_FALSE, SizeOf(TCastle2DParticle), Pointer(92));
 
     glBindBuffer(GL_ARRAY_BUFFER, Self.VBOInstanced);
