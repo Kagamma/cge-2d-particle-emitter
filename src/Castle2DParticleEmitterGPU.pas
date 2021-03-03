@@ -503,6 +503,14 @@ begin
   if InstanceCount = 0 then
     Exit;
 
+  if not Self.FEffect.BBox.IsEmpty then
+  begin
+    if not Params.Frustum^.Box3DCollisionPossibleSimple(Self.FEffect.BBox) then
+      Exit;
+  end;
+  Inc(Params.Statistics.ShapesRendered);
+  Inc(Params.Statistics.ShapesVisible);
+
   M := RenderContext.ProjectionMatrix * Params.RenderingCamera.Matrix * Params.Transform^;
 
   // Update particles

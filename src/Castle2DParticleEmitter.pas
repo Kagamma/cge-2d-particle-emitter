@@ -8,7 +8,7 @@ interface
 uses
   Classes, SysUtils,
   CastleTransform, CastleScene, CastleSceneCore, Castle2DSceneManager, CastleComponentSerialize,
-  CastleVectors, Generics.Collections,
+  CastleVectors, Generics.Collections, CastleBoxes,
   X3DNodes;
 
 type
@@ -84,6 +84,7 @@ type
     RotationStartVariance,
     RotationEnd,
     RotationEndVariance: Single;
+    BBox: TBox3D;
     { Clone all attributes of this effect to another one. Good if we want to
       load the effect from file just once and then apply it to other emitters
       so all emitters have the same effect. }
