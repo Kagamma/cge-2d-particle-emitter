@@ -35,50 +35,10 @@ type
   TCastle2DParticleInstanceArray = array of TCastle2DParticleInstance;
 
   TCastle2DParticleEmitterGPU = class(TCastleSceneCore)
-  public
-    class var ShaderVert: GLuint;
-    class var ShaderGeom: GLuint;
-    class var ShaderFrag: GLuint;
-    class var ShaderTFVert: GLuint;
   strict private
-    ShaderProg: GLuint;
-    ShaderTFProg: GLuint;
-
-    UniformMVPMatrix,
-    UniformSourcePosition,
-    UniformSourcePositionVariance,
-    UniformSpeed,
-    UniformSpeedVariance,
-    UniformParticleLifeSpan,
-    UniformParticleLifeSpanVariance,
-    UniformAngle,
-    UniformAngleVariance,
-    UniformGravity,
-    UniformTangentialAcceleration,
-    UniformTangentialAccelVariance,
-    UniformStartColor,
-    UniformStartColorVariance,
-    UniformFinishColor,
-    UniformFinishColorVariance,
-    UniformMaxParticles,
-    UniformStartParticleSize,
-    UniformStartParticleSizeVariance,
-    UniformFinishParticleSize,
-    UniformFinishParticleSizeVariance,
-    UniformEmitterType,
-    UniformMaxRadius,
-    UniformMaxRadiusVariance,
-    UniformMinRadius,
-    UniformMinRadiusVariance,
-    UniformRotatePerSecond,
-    UniformRotatePerSecondVariance,
-    UniformRotationStart,
-    UniformRotationStartVariance,
-    UniformRotationEnd,
-    UniformRotationEndVariance,
-    UniformEmissionTime,
-    UniformDeltaTime: GLuint;
     Texture: GLuint;
+    FTransformFeedbackProgram,
+    FRenderProgram: TGLSLProgram;
 
     VAOs,
     VBOs: array[0..1] of GLuint;
@@ -211,7 +171,6 @@ const
 '  float rotationStartVariance;'nl
 '  float rotationEnd;'nl
 '  float rotationEndVariance;'nl
-'  float duration;'nl
 '};'nl
 'uniform Effect effect;'nl
 'uniform float emissionTime;'nl
@@ -402,34 +361,8 @@ const
     'outEmitRotation'
   );
 
-function LoadShader(const Kind: GLuint; const Code: PGLchar): GLuint;
 var
-  Status: GLint = GL_FALSE;
-  Len: GLint;
-  ErrorMsg: array of GLchar;
-  S: String = '';
-  I: Integer;
-begin
-  Result := glCreateShader(Kind);
-  glShaderSource(Result, 1, @Code, nil);
-  glCompileShader(Result);
-  glGetShaderiv(Result, GL_COMPILE_STATUS, @Status);
-  glGetShaderiv(Result, GL_INFO_LOG_LENGTH, @Len);
-  if Status = GL_FALSE then
-  begin
-    if Kind = GL_VERTEX_SHADER then
-      WritelnWarning('TCastle2DParticleEmitterGPU', 'Compile vertex shader failed!')
-    else if Kind = GL_GEOMETRY_SHADER then
-      WritelnWarning('TCastle2DParticleEmitterGPU', 'Compile geometry shader failed!')
-    else
-      WritelnWarning('TCastle2DParticleEmitterGPU', 'Compile fragment shader failed!');
-    SetLength(ErrorMsg, Len + 1);
-    glGetShaderInfoLog(Result, Len, nil, @ErrorMsg[0]);
-    for I := 0 to Len do
-      S := S + (String(ErrorMsg[I]));
-    WritelnWarning('TCastle2DParticleEmitterGPU', S);
-  end;
-end;
+  IsCheckedForUsable: Boolean = False;
 
 procedure TCastle2DParticleEmitterGPU.SetStartEmitting(V: Boolean);
 begin
@@ -446,68 +379,28 @@ begin
   if not ApplicationProperties.IsGLContextOpen then Exit;
   if Self.FIsGLContextInitialized then Exit;
 
-  if Self.ShaderVert = 0 then
+  if not IsCheckedForUsable then
   begin
-    // Check maximum number of vertices
+    // Check maximum number of vertex attributes
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, @V);
     WritelnLog('GL_MAX_VERTEX_ATTRIBS: ' + IntToStr(V));
     if V < 12 then
-      WritelnWarning('TCastle2DParticleEmitterGPU', 'TCastle2DParticleEmitterGPU requires GL_MAX_VERTEX_ATTRIBS at least 12');
-    // Drawing shader
-    Self.ShaderVert := LoadShader(GL_VERTEX_SHADER, PChar(VertexShaderSource));
-    Self.ShaderGeom := LoadShader(GL_GEOMETRY_SHADER, PChar(GeometryShaderSource));
-    Self.ShaderFrag := LoadShader(GL_FRAGMENT_SHADER, PChar(FragmentShaderSource));
-
-    // Transform & Feedback shader
-    Self.ShaderTFVert := LoadShader(GL_VERTEX_SHADER, PChar(TransformVertexShaderSource));
+      raise Exception.Create('TCastle2DParticleEmitterGPU requires GL_MAX_VERTEX_ATTRIBS at least 12');
+    IsCheckedForUsable := True;
   end;
 
-  Self.ShaderProg := glCreateProgram();
-  glAttachShader(Self.ShaderProg, Self.ShaderVert);
-  glAttachShader(Self.ShaderProg, Self.ShaderGeom);
-  glAttachShader(Self.ShaderProg, Self.ShaderFrag);
-  glLinkProgram(Self.ShaderProg);
+  FTransformFeedbackProgram := TGLSLProgram.Create;
+  FTransformFeedbackProgram.AttachVertexShader(TransformVertexShaderSource);
+  FTransformFeedbackProgram.SetTransformFeedbackVaryings(Varyings);
+  FTransformFeedbackProgram.Link;
 
-  Self.ShaderTFProg := glCreateProgram();
-  glAttachShader(Self.ShaderTFProg, Self.ShaderTFVert);
-  glTransformFeedbackVaryings(Self.ShaderTFProg, Length(Varyings), Varyings, GL_INTERLEAVED_ATTRIBS);
-  glLinkProgram(Self.ShaderTFProg);
+  FRenderProgram := TGLSLProgram.Create;
+  FRenderProgram.AttachVertexShader(VertexShaderSource);
+  FRenderProgram.AttachGeometryShader(GeometryShaderSource);
+  FRenderProgram.AttachFragmentShader(FragmentShaderSource);
+  FRenderProgram.Link;
 
   // Map uniform
-  Self.UniformMVPMatrix := glGetUniformLocation(Self.ShaderProg, 'mvpMatrix');
-  Self.UniformSourcePosition := glGetUniformLocation(Self.ShaderTFProg, 'effect.sourcePosition');
-  Self.UniformSourcePositionVariance := glGetUniformLocation(Self.ShaderTFProg, 'effect.sourcePositionVariance');
-  Self.UniformSpeed := glGetUniformLocation(Self.ShaderTFProg, 'effect.speed');
-  Self.UniformSpeedVariance := glGetUniformLocation(Self.ShaderTFProg, 'effect.speedVariance');
-  Self.UniformParticleLifeSpan := glGetUniformLocation(Self.ShaderTFProg, 'effect.particleLifeSpan');
-  Self.UniformParticleLifeSpanVariance := glGetUniformLocation(Self.ShaderTFProg, 'effect.particleLifeSpanVariance');
-  Self.UniformAngle := glGetUniformLocation(Self.ShaderTFProg, 'effect.angle');
-  Self.UniformAngleVariance := glGetUniformLocation(Self.ShaderTFProg, 'effect.angleVariance');
-  Self.UniformGravity := glGetUniformLocation(Self.ShaderTFProg, 'effect.gravity');
-  Self.UniformTangentialAcceleration := glGetUniformLocation(Self.ShaderTFProg, 'effect.tangentialAcceleration');
-  Self.UniformTangentialAccelVariance := glGetUniformLocation(Self.ShaderTFProg, 'effect.tangentialAccelVariance');
-  Self.UniformStartColor := glGetUniformLocation(Self.ShaderTFProg, 'effect.startColor');
-  Self.UniformStartColorVariance := glGetUniformLocation(Self.ShaderTFProg, 'effect.startColorVariance');
-  Self.UniformFinishColor := glGetUniformLocation(Self.ShaderTFProg, 'effect.finishColor');
-  Self.UniformFinishColorVariance := glGetUniformLocation(Self.ShaderTFProg, 'effect.finishColorVariance');
-  Self.UniformMaxParticles := glGetUniformLocation(Self.ShaderTFProg, 'effect.maxParticles');
-  Self.UniformStartParticleSize := glGetUniformLocation(Self.ShaderTFProg, 'effect.startParticleSize');
-  Self.UniformStartParticleSizeVariance := glGetUniformLocation(Self.ShaderTFProg, 'effect.startParticleSizeVariance');
-  Self.UniformFinishParticleSize := glGetUniformLocation(Self.ShaderTFProg, 'effect.finishParticleSize');
-  Self.UniformFinishParticleSizeVariance := glGetUniformLocation(Self.ShaderTFProg, 'effect.finishParticleSizeVariance');
-  Self.UniformEmitterType := glGetUniformLocation(Self.ShaderTFProg, 'effect.emitterType');
-  Self.UniformMaxRadius := glGetUniformLocation(Self.ShaderTFProg, 'effect.maxRadius');
-  Self.UniformMaxRadiusVariance := glGetUniformLocation(Self.ShaderTFProg, 'effect.maxRadiusVariance');
-  Self.UniformMinRadius := glGetUniformLocation(Self.ShaderTFProg, 'effect.minRadius');
-  Self.UniformMinRadiusVariance := glGetUniformLocation(Self.ShaderTFProg, 'effect.minRadiusVariance');
-  Self.UniformRotatePerSecond := glGetUniformLocation(Self.ShaderTFProg, 'effect.rotatePerSecond');
-  Self.UniformRotatePerSecondVariance := glGetUniformLocation(Self.ShaderTFProg, 'effect.rotatePerSecondVariance');
-  Self.UniformRotationStart := glGetUniformLocation(Self.ShaderTFProg, 'effect.rotationStart');
-  Self.UniformRotationStartVariance := glGetUniformLocation(Self.ShaderTFProg, 'effect.rotationStartVariance');
-  Self.UniformRotationEnd := glGetUniformLocation(Self.ShaderTFProg, 'effect.rotationEnd');
-  Self.UniformRotationEndVariance := glGetUniformLocation(Self.ShaderTFProg, 'effect.rotationEndVariance');
-  Self.UniformDeltaTime := glGetUniformLocation(Self.ShaderTFProg, 'deltaTime');
-  Self.UniformEmissionTime := glGetUniformLocation(Self.ShaderTFProg, 'emissionTime');
   glGenBuffers(1, @Self.VBOInstanced);
   glGenBuffers(2, @Self.VBOs);
   glGenVertexArrays(2, @Self.VAOs);
@@ -520,8 +413,8 @@ begin
   glDeleteBuffers(1, @Self.VBOInstanced);
   glDeleteBuffers(2, @Self.VBOs);
   glDeleteVertexArrays(2, @Self.VAOs);
-  glDeleteProgram(Self.ShaderProg);
-  glDeleteProgram(Self.ShaderTFProg);
+  FreeAndNil(Self.FTransformFeedbackProgram);
+  FreeAndNil(Self.FRenderProgram);
   glFreeTexture(Self.Texture);
   Self.FIsGLContextInitialized := False;
 end;
@@ -552,6 +445,8 @@ end;
 procedure TCastle2DParticleEmitterGPU.Update(const SecondsPassed: Single; var RemoveMe: TRemoveType);
 begin
   inherited;
+  if not Assigned(Self.FEffect) then
+    Exit;
   Self.GLContextOpen;
   if Self.FIsNeedRefresh then
     Self.InternalRefreshEffect;
@@ -587,20 +482,20 @@ end;
 procedure TCastle2DParticleEmitterGPU.LocalRender(const Params: TRenderParams);
 var
   M: TMatrix4;
-  PreviousProgram: TGLSLProgram;
   InstanceCount: Integer;
 begin
   inherited;
-
+  if not Assigned(Self.FEffect) then
+    Exit;
   if not Self.FIsGLContextInitialized then
     Exit;
-
+  if Params.InShadow or (not Params.Transparent) then
+    Exit;
   // Why LocalRender get called 2 times in a frame?
   if not Self.FIsDrawn then
     Self.FIsDrawn := True
   else
     Exit;
-
   if (not Self.FStartEmitting) and (Self.FCountdownTillRemove <= 0) then
     Exit;
 
@@ -611,15 +506,14 @@ begin
   M := RenderContext.ProjectionMatrix * Params.RenderingCamera.Matrix * Params.Transform^;
 
   // Update particles
-  PreviousProgram := RenderContext.CurrentProgram;
   glEnable(GL_RASTERIZER_DISCARD);
-  glUseProgram(Self.ShaderTFProg);
-  glUniform1f(Self.UniformDeltaTime, Self.FSecondsPassed);
+  Self.FTransformFeedbackProgram.Enable;
+  Self.FTransformFeedbackProgram.Uniform('deltaTime').SetValue(Self.FSecondsPassed);
   if Self.FStartEmitting then
-    glUniform1f(Self.UniformEmissionTime, Self.FEmissionTime)
+    Self.FTransformFeedbackProgram.Uniform('emissionTime').SetValue(Self.FEmissionTime)
   else
-    glUniform1f(Self.UniformEmissionTime, 0);
-  glUniform2fv(Self.UniformSourcePosition, 1, @Self.FPosition);
+    Self.FTransformFeedbackProgram.Uniform('emissionTime').SetValue(0);
+  Self.FTransformFeedbackProgram.Uniform('effect.sourcePosition').SetValue(Self.FPosition);
   glBindVertexArray(Self.VAOs[(CurrentBuffer + 1) mod 2]);
   glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, Self.VBOs[CurrentBuffer]);
   glBeginTransformFeedback(GL_POINTS);
@@ -630,8 +524,8 @@ begin
   // Draw particles
   glEnable(GL_BLEND);
   glBlendFunc(Self.FEffect.BlendFuncSource, Self.FEffect.BlendFuncDestination);
-  glUseProgram(Self.ShaderProg);
-  glUniformMatrix4fv(Self.UniformMVPMatrix, 1, GL_FALSE, @M);
+  Self.FRenderProgram.Enable;
+  Self.FRenderProgram.Uniform('mvpMatrix').SetValue(M);
   glBindVertexArray(Self.VAOs[CurrentBuffer]);
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, Self.Texture);
@@ -639,12 +533,6 @@ begin
   glBindTexture(GL_TEXTURE_2D, 0);
   glBindVertexArray(0);
   glDisable(GL_BLEND);
-  // Enable the previous program
-  if PreviousProgram <> nil then
-  begin
-    PreviousProgram.Disable;
-    PreviousProgram.Enable;
-  end;
 
   CurrentBuffer := (CurrentBuffer + 1) mod 2;
 end;
@@ -730,45 +618,47 @@ begin
   );
 
   // Transfer effect settings to shader
-  glUseProgram(Self.ShaderTFProg);
-    glUniform2fv(Self.UniformSourcePosition, 1, @Self.FEffect.SourcePosition);
-    glUniform2fv(Self.UniformSourcePositionVariance, 1, @Self.FEffect.SourcePositionVariance);
-    glUniform1f(Self.UniformSpeed, Self.FEffect.Speed);
-    glUniform1f(Self.UniformSpeedVariance, Self.FEffect.SpeedVariance);
-    glUniform1f(Self.UniformParticleLifeSpan, Self.FEffect.ParticleLifeSpan);
-    glUniform1f(Self.UniformParticleLifeSpanVariance, Self.FEffect.ParticleLifeSpanVariance);
-    glUniform1f(Self.UniformAngle, Self.FEffect.Angle);
-    glUniform1f(Self.UniformAngleVariance, Self.FEffect.AngleVariance);
-    glUniform2fv(Self.UniformGravity, 1, @Self.FEffect.Gravity);
-    glUniform1f(Self.UniformTangentialAcceleration, Self.FEffect.TangentialAcceleration);
-    glUniform1f(Self.UniformTangentialAccelVariance, Self.FEffect.TangentialAccelVariance);
-    glUniform4fv(Self.UniformStartColor, 1, @Self.FEffect.StartColor);
-    glUniform4fv(Self.UniformStartColorVariance, 1, @Self.FEffect.StartColorVariance);
-    glUniform4fv(Self.UniformFinishColor, 1, @Self.FEffect.FinishColor);
-    glUniform4fv(Self.UniformFinishColorVariance, 1, @Self.FEffect.FinishColorVariance);
-    glUniform1i(Self.UniformMaxParticles, Self.FEffect.MaxParticles);
-    glUniform1f(Self.UniformStartParticleSize, Self.FEffect.StartParticleSize);
-    glUniform1f(Self.UniformStartParticleSizeVariance, Self.FEffect.StartParticleSizeVariance);
-    glUniform1f(Self.UniformFinishParticleSize, Self.FEffect.FinishParticleSize);
-    glUniform1f(Self.UniformFinishParticleSizeVariance, Self.FEffect.FinishParticleSizeVariance);
-    glUniform1i(Self.UniformEmitterType, LongInt(Self.FEffect.EmitterType));
-    glUniform1f(Self.UniformMaxRadius, Self.FEffect.MaxRadius);
-    glUniform1f(Self.UniformMaxRadiusVariance, Self.FEffect.MaxRadiusVariance);
-    glUniform1f(Self.UniformMinRadius, Self.FEffect.MinRadius);
-    glUniform1f(Self.UniformMinRadiusVariance, Self.FEffect.MinRadiusVariance);
-    glUniform1f(Self.UniformRotatePerSecond, Self.FEffect.RotatePerSecond);
-    glUniform1f(Self.UniformRotatePerSecondVariance, Self.FEffect.RotatePerSecondVariance);
-    glUniform1f(Self.UniformRotationStart, Self.FEffect.RotationStart);
-    glUniform1f(Self.UniformRotationStartVariance, Self.FEffect.RotationStartVariance);
-    glUniform1f(Self.UniformRotationEnd, Self.FEffect.RotationEnd);
-    glUniform1f(Self.UniformRotationEndVariance, Self.FEffect.RotationEndVariance);
-  glUseProgram(0);
+  Self.FTransformFeedbackProgram.Enable;
+  Self.FTransformFeedbackProgram.Uniform('effect.sourcePosition').SetValue(Self.FEffect.SourcePosition);
+  Self.FTransformFeedbackProgram.Uniform('effect.sourcePositionVariance').SetValue(Self.FEffect.SourcePositionVariance);
+  Self.FTransformFeedbackProgram.Uniform('effect.speed').SetValue(Self.FEffect.Speed);
+  Self.FTransformFeedbackProgram.Uniform('effect.speedVariance').SetValue(Self.FEffect.SpeedVariance);
+  Self.FTransformFeedbackProgram.Uniform('effect.particleLifeSpan').SetValue(Self.FEffect.ParticleLifeSpan);
+  Self.FTransformFeedbackProgram.Uniform('effect.particleLifeSpanVariance').SetValue(Self.FEffect.ParticleLifeSpanVariance);
+  Self.FTransformFeedbackProgram.Uniform('effect.angle').SetValue(Self.FEffect.Angle);
+  Self.FTransformFeedbackProgram.Uniform('effect.angleVariance').SetValue(Self.FEffect.AngleVariance);
+  Self.FTransformFeedbackProgram.Uniform('effect.gravity').SetValue(Self.FEffect.Gravity);
+  Self.FTransformFeedbackProgram.Uniform('effect.tangentialAcceleration').SetValue(Self.FEffect.TangentialAcceleration);
+  Self.FTransformFeedbackProgram.Uniform('effect.tangentialAccelVariance').SetValue(Self.FEffect.TangentialAccelVariance);
+  Self.FTransformFeedbackProgram.Uniform('effect.startColor').SetValue(Self.FEffect.StartColor);
+  Self.FTransformFeedbackProgram.Uniform('effect.startColorVariance').SetValue(Self.FEffect.StartColorVariance);
+  Self.FTransformFeedbackProgram.Uniform('effect.finishColor').SetValue(Self.FEffect.FinishColor);
+  Self.FTransformFeedbackProgram.Uniform('effect.finishColorVariance').SetValue(Self.FEffect.FinishColorVariance);
+  Self.FTransformFeedbackProgram.Uniform('effect.maxParticles').SetValue(Self.FEffect.MaxParticles);
+  Self.FTransformFeedbackProgram.Uniform('effect.startParticleSize').SetValue(Self.FEffect.StartParticleSize);
+  Self.FTransformFeedbackProgram.Uniform('effect.startParticleSizeVariance').SetValue(Self.FEffect.StartParticleSizeVariance);
+  Self.FTransformFeedbackProgram.Uniform('effect.finishParticleSize').SetValue(Self.FEffect.FinishParticleSize);
+  Self.FTransformFeedbackProgram.Uniform('effect.finishParticleSizeVariance').SetValue(Self.FEffect.FinishParticleSizeVariance);
+  Self.FTransformFeedbackProgram.Uniform('effect.emitterType').SetValue(GLint(Self.FEffect.EmitterType));
+  Self.FTransformFeedbackProgram.Uniform('effect.maxRadius').SetValue(Self.FEffect.MaxRadius);
+  Self.FTransformFeedbackProgram.Uniform('effect.maxRadiusVariance').SetValue(Self.FEffect.MaxRadiusVariance);
+  Self.FTransformFeedbackProgram.Uniform('effect.minRadius').SetValue(Self.FEffect.MinRadius);
+  Self.FTransformFeedbackProgram.Uniform('effect.minRadiusVariance').SetValue(Self.FEffect.MinRadiusVariance);
+  Self.FTransformFeedbackProgram.Uniform('effect.rotatePerSecond').SetValue(Self.FEffect.RotatePerSecond);
+  Self.FTransformFeedbackProgram.Uniform('effect.rotatePerSecondVariance').SetValue(Self.FEffect.RotatePerSecondVariance);
+  Self.FTransformFeedbackProgram.Uniform('effect.rotationStart').SetValue(Self.FEffect.RotationStart);
+  Self.FTransformFeedbackProgram.Uniform('effect.rotationStartVariance').SetValue(Self.FEffect.RotationStartVariance);
+  Self.FTransformFeedbackProgram.Uniform('effect.rotationEnd').SetValue(Self.FEffect.RotationEnd);
+  Self.FTransformFeedbackProgram.Uniform('effect.rotationEndVariance').SetValue(Self.FEffect.RotationEndVariance);
+  Self.FTransformFeedbackProgram.Uniform('deltaTime').SetValue(Self.FSecondsPassed);
+  Self.FTransformFeedbackProgram.Uniform('emissionTime').SetValue(Self.FEmissionTime);
+
   // Generate initial lifecycle
   for I := 0 to Self.FEffect.MaxParticles - 1 do
   begin
     with Self.Particles[I] do
     begin
-      TimeToLive := -Random * (Self.FEffect.ParticleLifeSpan + Self.FEffect.ParticleLifeSpanVariance * (Random * 2 - 1));
+      TimeToLive := Random * (Self.FEffect.ParticleLifeSpan + Self.FEffect.ParticleLifeSpanVariance);
       Position := Vector2(Random, Random);
       // Take advantage of unused RadialAcceleration for initial seed
       RadialAcceleration := Random;
@@ -827,7 +717,6 @@ begin
 end;
 
 initialization
-  TCastle2DParticleEmitterGPU.ShaderVert := 0;
   RegisterSerializableComponent(TCastle2DParticleEmitterGPU, '2D Particle Emitter (GPU)');
 
 end.
