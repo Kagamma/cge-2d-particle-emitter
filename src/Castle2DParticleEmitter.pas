@@ -85,6 +85,7 @@ type
     RotationEnd,
     RotationEndVariance: Single;
     BBox: TBox3D;
+    constructor Create;
     { Clone all attributes of this effect to another one. Good if we want to
       load the effect from file just once and then apply it to other emitters
       so all emitters have the same effect. }
@@ -170,6 +171,12 @@ var
 function TCastle2DParticleList.Ptr(const APos: Integer): PCastle2DParticle;
 begin
   Result := @FItems[APos];
+end;
+
+constructor TCastle2DParticleEffect.Create;
+begin
+  inherited;
+  Self.BBox := TBox3D.Empty;
 end;
 
 procedure TCastle2DParticleEffect.Clone(var ATarget: TCastle2DParticleEffect);

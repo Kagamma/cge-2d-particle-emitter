@@ -51,7 +51,7 @@ type
     FEffect: TCastle2DParticleEffect;
     FParticleCount: Integer;
     FSecondsPassed: Single;
-    FIsDrawn: Boolean;
+    FIsUpdated: Boolean;
     { Countdown before remove the emitter }
     FCountdownTillRemove,
     { The value is in miliseconds. Set it to -1 for infinite emitting, 0 to
@@ -452,7 +452,7 @@ begin
     Self.InternalRefreshEffect;
 
   Self.FSecondsPassed := SecondsPassed;
-  Self.FIsDrawn := False;
+  Self.FIsUpdated := False;
 
   if (FEmissionTime > 0) or (FEmissionTime = -1) then
   begin
@@ -489,15 +489,15 @@ begin
     Exit;
   if not Self.FIsGLContextInitialized then
     Exit;
-  if Params.InShadow or (not Params.Transparent) then
-    Exit;
-  // Why LocalRender get called 2 times in a frame?
-  if not Self.FIsDrawn then
-    Self.FIsDrawn := True
-  else
+  if Params.InShadow or (not Params.Transparent) or (Params.StencilTest > 0) then
     Exit;
   if (not Self.FStartEmitting) and (Self.FCountdownTillRemove <= 0) then
     Exit;
+  if not Self.FEffect.BBox.IsEmpty then
+  begin
+    if not Params.Frustum^.Box3DCollisionPossibleSimple(Self.FEffect.BBox) then
+      Exit;
+  end;
 
   InstanceCount := Length(Self.FInstances);
   if InstanceCount = 0 then
@@ -516,20 +516,23 @@ begin
   M := RenderContext.ProjectionMatrix * Params.RenderingCamera.Matrix * Params.Transform^;
 
   // Update particles
-  glEnable(GL_RASTERIZER_DISCARD);
-  Self.FTransformFeedbackProgram.Enable;
-  Self.FTransformFeedbackProgram.Uniform('deltaTime').SetValue(Self.FSecondsPassed);
-  if Self.FStartEmitting then
-    Self.FTransformFeedbackProgram.Uniform('emissionTime').SetValue(Self.FEmissionTime)
-  else
-    Self.FTransformFeedbackProgram.Uniform('emissionTime').SetValue(0);
-  Self.FTransformFeedbackProgram.Uniform('effect.sourcePosition').SetValue(Self.FPosition);
-  glBindVertexArray(Self.VAOs[(CurrentBuffer + 1) mod 2]);
-  glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, Self.VBOs[CurrentBuffer]);
-  glBeginTransformFeedback(GL_POINTS);
-  glDrawArrays(GL_POINTS, 0, Self.FEffect.MaxParticles);
-  glEndTransformFeedback();
-  glDisable(GL_RASTERIZER_DISCARD);
+  if not Self.FIsUpdated then
+  begin
+    glEnable(GL_RASTERIZER_DISCARD);
+    Self.FTransformFeedbackProgram.Enable;
+    Self.FTransformFeedbackProgram.Uniform('deltaTime').SetValue(Self.FSecondsPassed);
+    if Self.FStartEmitting then
+      Self.FTransformFeedbackProgram.Uniform('emissionTime').SetValue(Self.FEmissionTime)
+    else
+      Self.FTransformFeedbackProgram.Uniform('emissionTime').SetValue(0);
+    Self.FTransformFeedbackProgram.Uniform('effect.sourcePosition').SetValue(Self.FPosition);
+    glBindVertexArray(Self.VAOs[(CurrentBuffer + 1) mod 2]);
+    glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, Self.VBOs[CurrentBuffer]);
+    glBeginTransformFeedback(GL_POINTS);
+    glDrawArrays(GL_POINTS, 0, Self.FEffect.MaxParticles);
+    glEndTransformFeedback();
+    glDisable(GL_RASTERIZER_DISCARD);
+  end;
 
   // Draw particles
   glEnable(GL_BLEND);
@@ -544,7 +547,11 @@ begin
   glBindVertexArray(0);
   glDisable(GL_BLEND);
 
-  CurrentBuffer := (CurrentBuffer + 1) mod 2;
+  if not Self.FIsUpdated then
+  begin
+    CurrentBuffer := (CurrentBuffer + 1) mod 2;
+    Self.FIsUpdated := True;
+  end;
 end;
 
 procedure TCastle2DParticleEmitterGPU.LoadEffect(const AURL: String);
