@@ -510,8 +510,8 @@ begin
     Self.FTransformFeedbackProgram.Uniform('effect.rotationEndVariance').SetValue(Self.FEffect.RotationEndVariance);
     Self.FTransformFeedbackProgram.Uniform('deltaTime').SetValue(Self.FSecondsPassed);
     Self.FTransformFeedbackProgram.Uniform('emissionTime').SetValue(Self.FEmissionTime);
-    glBindVertexArray(Self.VAOs[(CurrentBuffer + 1) mod 2]);
-    glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, Self.VBOs[CurrentBuffer]);
+    glBindVertexArray(Self.VAOs[CurrentBuffer]);
+    glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, Self.VBOs[(CurrentBuffer + 1) mod 2]);
     glBeginTransformFeedback(GL_POINTS);
     glDrawArrays(GL_POINTS, 0, Self.FEffect.MaxParticles);
     glEndTransformFeedback();
@@ -569,7 +569,7 @@ begin
   glBlendFunc(Self.FEffect.BlendFuncSource, Self.FEffect.BlendFuncDestination);
   Self.FRenderProgram.Enable;
   Self.FRenderProgram.Uniform('mvpMatrix').SetValue(M);
-  glBindVertexArray(Self.VAOs[(CurrentBuffer + 1) mod 2]);
+  glBindVertexArray(Self.VAOs[CurrentBuffer]);
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, Self.Texture);
   glDrawArraysInstanced(GL_POINTS, 0, Self.FEffect.MaxParticles, InstanceCount);
@@ -722,8 +722,6 @@ begin
 end;
 
 function TCastle2DParticleEmitterGPU.LocalBoundingBox: TBox3D;
-var
-  I: Integer;
 begin
   if GetExists then
     Result := Self.FEffect.BBox
