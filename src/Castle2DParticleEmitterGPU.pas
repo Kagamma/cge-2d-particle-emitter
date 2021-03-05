@@ -19,7 +19,7 @@ uses
   CastleTransform, CastleSceneCore, CastleComponentSerialize,
   CastleVectors, CastleRenderContext, Generics.Collections, CastleGLImages, CastleLog,
   Castle2DParticleEmitter, CastleUtils, CastleApplicationProperties, CastleGLShaders,
-  X3DNodes;
+  CastleBoxes, X3DNodes;
 
 type
   TCastle2DParticleInstanceGPU = packed record
@@ -94,6 +94,7 @@ type
 
     procedure RefreshEffect;
     procedure SetInstances(const V: TCastle2DParticleInstanceArray);
+    function LocalBoundingBox: TBox3D; override;
 
     property Effect: TCastle2DParticleEffect read FEffect;
     property ParticleCount: Integer read FParticleCount;
@@ -503,20 +504,11 @@ begin
   if (not Self.FStartEmitting) and (Self.FCountdownTillRemove <= 0) then
     Exit;
   if not Self.FEffect.BBox.IsEmpty then
-  begin
     if not Params.Frustum^.Box3DCollisionPossibleSimple(Self.FEffect.BBox) then
       Exit;
-  end;
-
   InstanceCount := Length(Self.FInstances);
   if InstanceCount = 0 then
     Exit;
-
-  if not Self.FEffect.BBox.IsEmpty then
-  begin
-    if not Params.Frustum^.Box3DCollisionPossibleSimple(Self.FEffect.BBox) then
-      Exit;
-  end;
   Inc(Params.Statistics.ShapesRendered);
   Inc(Params.Statistics.ShapesVisible);
   Inc(Params.Statistics.ScenesRendered);
@@ -740,6 +732,17 @@ end;
 procedure TCastle2DParticleEmitterGPU.RefreshEffect;
 begin
   Self.FIsNeedRefresh := True;
+end;
+
+function TCastle2DParticleEmitterGPU.LocalBoundingBox: TBox3D;
+var
+  I: Integer;
+begin
+  if GetExists then
+    Result := Self.FEffect.BBox
+  else
+    Result := TBox3D.Empty;
+  Result.Include(inherited LocalBoundingBox);
 end;
 
 initialization
