@@ -517,6 +517,7 @@ begin
     glEndTransformFeedback();
     glDisable(GL_RASTERIZER_DISCARD);
     glBindVertexArray(0); // Just in case :)
+    CurrentBuffer := (CurrentBuffer + 1) mod 2;
   end;
 
   RemoveMe := rtNone;
