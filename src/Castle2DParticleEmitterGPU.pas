@@ -556,11 +556,11 @@ begin
   InstanceCount := Length(Self.FInstances);
   if InstanceCount = 0 then
     Exit;
-  Inc(Params.Statistics.ShapesVisible);
   Inc(Params.Statistics.ScenesVisible);
   if not Self.FEffect.BBox.IsEmpty then
     if not Params.Frustum^.Box3DCollisionPossibleSimple(Self.FEffect.BBox) then
       Exit;
+  Inc(Params.Statistics.ShapesVisible);
   Inc(Params.Statistics.ShapesRendered);
   Inc(Params.Statistics.ScenesRendered);
 
