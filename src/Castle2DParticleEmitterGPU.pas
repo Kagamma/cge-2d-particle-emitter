@@ -542,6 +542,8 @@ procedure TCastle2DParticleEmitterGPU.LocalRender(const Params: TRenderParams);
 var
   M: TMatrix4;
   InstanceCount: Integer;
+  V: TVector3;
+  RelativeBBox: TBox3D;
 begin
   inherited;
   Self.FIsUpdated := False;
@@ -558,8 +560,15 @@ begin
     Exit;
   Inc(Params.Statistics.ScenesVisible);
   if not Self.FEffect.BBox.IsEmpty then
-    if not Params.Frustum^.Box3DCollisionPossibleSimple(Self.FEffect.BBox) then
+  begin
+    V := Vector3(Self.Position, 0);
+    RelativeBBox := Box3D(
+      Self.FEffect.BBox.Data[0] + V,
+      Self.FEffect.BBox.Data[1] + V
+    );
+    if not Params.Frustum^.Box3DCollisionPossibleSimple(RelativeBBox) then
       Exit;
+  end;
   Inc(Params.Statistics.ShapesVisible);
   Inc(Params.Statistics.ShapesRendered);
   Inc(Params.Statistics.ScenesRendered);
@@ -724,10 +733,21 @@ begin
 end;
 
 function TCastle2DParticleEmitterGPU.LocalBoundingBox: TBox3D;
+var
+  V: TVector3;
 begin
   if GetExists then
-    Result := Self.FEffect.BBox
-  else
+  begin
+    if not Self.FEffect.BBox.IsEmpty then
+    begin
+      V := Vector3(Self.Position, 0);
+      Result := Box3D(
+        Self.FEffect.BBox.Data[0] + V,
+        Self.FEffect.BBox.Data[1] + V
+      );
+    end else
+      Result := Self.FEffect.BBox;
+  end else
     Result := TBox3D.Empty;
   Result.Include(inherited LocalBoundingBox);
 end;
