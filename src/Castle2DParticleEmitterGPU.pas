@@ -385,8 +385,8 @@ begin
     // Check maximum number of vertex attributes
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, @V);
     WritelnLog('GL_MAX_VERTEX_ATTRIBS: ' + IntToStr(V));
-    if V < 12 then
-      raise Exception.Create('TCastle2DParticleEmitterGPU requires GL_MAX_VERTEX_ATTRIBS at least 12');
+    if V < Length(Varyings) then
+      raise Exception.Create(Format('TCastle2DParticleEmitterGPU requires GL_MAX_VERTEX_ATTRIBS at least %d', [Length(Varyings)]));
     IsCheckedForUsable := True;
   end;
 
