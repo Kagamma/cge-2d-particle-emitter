@@ -142,5 +142,9 @@ initialization
   Application.MainWindow := Window;
   Window.OnRender := @WindowRender;
   Window.OnUpdate := @WindowUpdate;
-
+finalization
+  FreeAndNil(EffectFire);
+  FreeAndNil(EffectTrippy);
+  FreeAndNil(EffectJellyFish);
+  FreeAndNil(EffectSpiral);
 end.
