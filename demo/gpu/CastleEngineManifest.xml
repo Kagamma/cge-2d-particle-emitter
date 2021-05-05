@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="test_particle_emitter"
   standalone_source="test_particle_emitter.lpr"
+  game_units="Game"
   screen_orientation="landscape">
   <compiler_options>
     <search_paths>
