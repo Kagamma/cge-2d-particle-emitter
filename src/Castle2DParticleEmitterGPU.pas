@@ -69,13 +69,13 @@ type
     FIsNeedRefresh: Boolean;
     procedure SetStartEmitting(V: Boolean);
     procedure InternalRefreshEffect;
+    procedure GLContextOpen;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure Update(const SecondsPassed: Single; var RemoveMe: TRemoveType); override;
     procedure LocalRender(const Params: TRenderParams); override;
-    procedure GLContextOpen; virtual;
-    procedure GLContextClose; virtual;
+    procedure GLContextClose; override;
 
     { This method will free the current Effect if any, init a new FEffect and
       load settings from .PEX file. }
@@ -410,14 +410,17 @@ end;
 
 procedure TCastle2DParticleEmitterGPU.GLContextClose;
 begin
-  if not Self.FIsGLContextInitialized then Exit;
-  glDeleteBuffers(1, @Self.VBOInstanced);
-  glDeleteBuffers(2, @Self.VBOs);
-  glDeleteVertexArrays(2, @Self.VAOs);
-  FreeAndNil(Self.FTransformFeedbackProgram);
-  FreeAndNil(Self.FRenderProgram);
-  glFreeTexture(Self.Texture);
-  Self.FIsGLContextInitialized := False;
+  if Self.FIsGLContextInitialized then
+  begin
+    glDeleteBuffers(1, @Self.VBOInstanced);
+    glDeleteBuffers(2, @Self.VBOs);
+    glDeleteVertexArrays(2, @Self.VAOs);
+    FreeAndNil(Self.FTransformFeedbackProgram);
+    FreeAndNil(Self.FRenderProgram);
+    glFreeTexture(Self.Texture);
+    Self.FIsGLContextInitialized := False;
+  end;
+  inherited;
 end;
 
 constructor TCastle2DParticleEmitterGPU.Create(AOwner: TComponent);
@@ -440,7 +443,6 @@ destructor TCastle2DParticleEmitterGPU.Destroy;
 begin
   if Self.FOwnEffect and Assigned(FEffect) then
     FEffect.Free;
-  Self.GLContextClose;
   inherited;
 end;
 
