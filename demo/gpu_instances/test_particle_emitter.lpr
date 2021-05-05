@@ -3,5 +3,5 @@
 program test_particle_emitter;
 uses CastleWindow, Game;
 begin
-  Window.OpenAndRun;
+  Application.MainWindow.OpenAndRun;
 end.

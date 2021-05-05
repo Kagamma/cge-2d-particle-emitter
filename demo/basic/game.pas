@@ -4,25 +4,20 @@ unit Game;
 
 interface
 
-uses
-  CastleWindowTouch;
-
-var
-  Window: TCastleWindowTouch;
-
 implementation
 
 uses
   SysUtils, CastleWindow, CastleScene, CastleControls,
   CastleFilesUtils, CastleSceneCore, CastleKeysMouse, CastleColors,
-  Castle2DSceneManager, CastleUIControls,
-  Castle3D, CastleVectors, CastleTransform,
+  CastleViewport, CastleUIControls,
+  CastleVectors, CastleTransform,
   X3DTime, X3DFields,
   Castle2DParticleEmitter;
 
 var
-  SceneManager: T2DSceneManager;
-  MenuScene: T2DScene;
+  Window: TCastleWindowBase;
+  Viewport: TCastleViewport;
+  MenuScene: TCastleScene;
   Emitter: TCastle2DParticleEmitter;
   CurrentMenu: integer = 0;
   EffectFire,
@@ -83,14 +78,16 @@ begin
   Window.Container.UIReferenceHeight := 720;
   Window.Container.UIScaling := usFitReferenceSize;
 
-  SceneManager := T2DSceneManager.Create(Application);
-  SceneManager.ProjectionAutoSize := false;
-  SceneManager.ProjectionWidth := 1280;
-  SceneManager.ProjectionHeight := 720;
-  SceneManager.ProjectionOriginCenter := true;
-  Window.Controls.InsertFront(SceneManager);
+  Viewport := TCastleViewport.Create(Application);
+  Viewport.Setup2D;
+  Viewport.FullSize := true;
+  Viewport.Camera.Orthographic.Width := 1280;
+  Viewport.Camera.Orthographic.Height := 720;
+  Viewport.Camera.Orthographic.Origin := Vector2(0.5, 0.5);
+  Window.Controls.InsertFront(Viewport);
 
-  MenuScene := T2DScene.Create(SceneManager);
+  MenuScene := TCastleScene.Create(Viewport);
+  MenuScene.Setup2D;
   MenuScene.Load(ApplicationData('menu.x3dv'));
   MenuScene.RegisterCompiledScript('fire_effect', @TScriptHelper(nil).FireEffect);
   MenuScene.RegisterCompiledScript('trippy_effect', @TScriptHelper(nil).TrippyEffect);
@@ -98,7 +95,7 @@ begin
   MenuScene.RegisterCompiledScript('spiral_effect', @TScriptHelper(nil).SpiralEffect);
   MenuScene.Spatial := [ssDynamicCollisions];
   MenuScene.ProcessEvents := true;
-  SceneManager.Items.Add(MenuScene);
+  Viewport.Items.Add(MenuScene);
 
   EffectFire := TCastle2DParticleEffect.Create;
   EffectTrippy := TCastle2DParticleEffect.Create;
@@ -109,14 +106,14 @@ begin
   EffectJellyFish.Load(ApplicationData('jellyfish.pex'));
   EffectSpiral.Load(ApplicationData('spiral.pex'));
 
-  T := TCastleTransform.Create(SceneManager);
+  T := TCastleTransform.Create(Viewport);
   T.Translation := Vector3(-213, 0, 0);
   Emitter := TCastle2DParticleEmitter.Create(T);
   Emitter.LoadEffect(EffectFire, False);
   Emitter.StartEmitting := True;
   T.Add(Emitter);
 
-  SceneManager.Items.Add(T);
+  Viewport.Items.Add(T);
 end;
 
 procedure WindowRender(Container: TUIContainer);
@@ -138,7 +135,7 @@ initialization
   OnGetApplicationName := @MyGetApplicationName;
   Application.OnInitialize := @ApplicationInitialize;
 
-  Window := TCastleWindowTouch.Create(Application);
+  Window := TCastleWindowBase.Create(Application);
   Application.MainWindow := Window;
   Window.OnRender := @WindowRender;
   Window.OnUpdate := @WindowUpdate;
