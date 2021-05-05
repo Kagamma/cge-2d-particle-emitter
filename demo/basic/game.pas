@@ -126,13 +126,7 @@ procedure WindowUpdate(Container: TUIContainer);
 begin
 end;
 
-function MyGetApplicationName: string;
-begin
-  Result := 'test_particle_emitter';
-end;
-
 initialization
-  OnGetApplicationName := @MyGetApplicationName;
   Application.OnInitialize := @ApplicationInitialize;
 
   Window := TCastleWindowBase.Create(Application);
