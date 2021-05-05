@@ -16,7 +16,7 @@ uses
   SysUtils, CastleWindow, CastleScene, CastleControls,
   CastleFilesUtils, CastleSceneCore, CastleKeysMouse, CastleColors,
   CastleViewport, CastleUIControls,
-  Castle3D, CastleVectors, CastleTransform,
+  CastleVectors, CastleTransform,
   X3DTime, X3DFields,
   Castle2DParticleEmitter;
 
