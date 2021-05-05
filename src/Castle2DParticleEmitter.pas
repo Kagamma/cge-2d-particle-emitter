@@ -7,7 +7,7 @@ interface
 
 uses
   Classes, SysUtils,
-  CastleTransform, CastleScene, CastleSceneCore, Castle2DSceneManager, CastleComponentSerialize,
+  CastleTransform, CastleScene, CastleSceneCore, CastleComponentSerialize,
   CastleVectors, Generics.Collections, CastleBoxes,
   X3DNodes;
 
@@ -95,7 +95,7 @@ type
   end;
 
   { 2D particle emitter for CGE. }
-  TCastle2DParticleEmitter = class(TCastle2DScene)
+  TCastle2DParticleEmitter = class(TCastleScene)
   private
     FURL: String;
     FStartEmitting: Boolean;
@@ -363,6 +363,7 @@ end;
 constructor TCastle2DParticleEmitter.Create(AOwner: TComponent);
 begin
   inherited;
+  Setup2D;
   { No collision for particles, and we also dont need to perform culling. I
     cant imagine how much time CGE would need in order to go through all
     vertices on emitters that emit thousands of particles just for calculating
