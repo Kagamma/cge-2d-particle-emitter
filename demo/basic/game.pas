@@ -4,12 +4,6 @@ unit Game;
 
 interface
 
-uses
-  CastleWindowTouch;
-
-var
-  Window: TCastleWindowTouch;
-
 implementation
 
 uses
@@ -21,6 +15,7 @@ uses
   Castle2DParticleEmitter;
 
 var
+  Window: TCastleWindowBase;
   Viewport: TCastleViewport;
   MenuScene: TCastleScene;
   Emitter: TCastle2DParticleEmitter;
@@ -140,7 +135,7 @@ initialization
   OnGetApplicationName := @MyGetApplicationName;
   Application.OnInitialize := @ApplicationInitialize;
 
-  Window := TCastleWindowTouch.Create(Application);
+  Window := TCastleWindowBase.Create(Application);
   Application.MainWindow := Window;
   Window.OnRender := @WindowRender;
   Window.OnUpdate := @WindowUpdate;
