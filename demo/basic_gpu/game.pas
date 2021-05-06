@@ -39,7 +39,7 @@ begin
   Emitter.EmissionTime := 0;
   Emitter.ReleaseWhenDone := true;
   Emitter := TCastle2DParticleEmitterGPU.Create(T);
-  Emitter.LoadEffect(AEffect, False);
+  Emitter.LoadEffect(AEffect);
   Emitter.StartEmitting := True;
   T.Add(Emitter);
 end;
@@ -97,10 +97,10 @@ begin
   MenuScene.ProcessEvents := true;
   Viewport.Items.Add(MenuScene);
 
-  EffectFire := TCastle2DParticleEffect.Create;
-  EffectTrippy := TCastle2DParticleEffect.Create;
-  EffectJellyFish := TCastle2DParticleEffect.Create;
-  EffectSpiral := TCastle2DParticleEffect.Create;
+  EffectFire := TCastle2DParticleEffect.Create(Application);
+  EffectTrippy := TCastle2DParticleEffect.Create(Application);
+  EffectJellyFish := TCastle2DParticleEffect.Create(Application);
+  EffectSpiral := TCastle2DParticleEffect.Create(Application);
   EffectFire.Load(ApplicationData('fire.pex'));
   EffectTrippy.Load(ApplicationData('trippy.pex'));
   EffectJellyFish.Load(ApplicationData('jellyfish.pex'));
@@ -109,7 +109,7 @@ begin
   T := TCastleTransform.Create(Viewport);
   T.Translation := Vector3(-213, 0, 0);
   Emitter := TCastle2DParticleEmitterGPU.Create(T);
-  Emitter.LoadEffect(EffectFire, False);
+  Emitter.LoadEffect(EffectFire);
   Emitter.StartEmitting := True;
   T.Add(Emitter);
 

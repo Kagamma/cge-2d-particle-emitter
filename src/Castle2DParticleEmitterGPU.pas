@@ -60,7 +60,6 @@ type
     { When this is set to true, the emitter will automatically freed after
       all particles destroyed. }
     FReleaseWhenDone: Boolean;
-    FOwnEffect: Boolean;
     FPosition: TVector2;
     { Set this to fast-drawing (instancing) the same particles at multiple positions. The position is relative to Translation }
     FInstances: TCastle2DParticleInstanceGPUArray;
@@ -80,17 +79,16 @@ type
     { This method will free the current Effect if any, init a new FEffect and
       load settings from .PEX file. }
     procedure LoadEffect(const AURL: String); overload;
-    { If AOwnEffect = true the effect will be freed once emitter is freed. }
-    procedure LoadEffect(const AEffect: TCastle2DParticleEffect;
-        const AOwnEffect: Boolean = True); overload;
+    procedure LoadEffect(const AEffect: TCastle2DParticleEffect); overload;
+
+    procedure LoadPEX(const AURL: String); overload; deprecated 'Use LoadEffect';
+    { AOwnEffect is ignored. }
+    procedure LoadPEX(const AEffect: TCastle2DParticleEffect;
+        const AOwnEffect: Boolean = True); overload; deprecated 'Use LoadEffect instead. AOwnEffect is ignored.';
+
     { Refresh the emitter according to the change from effect. Normally we dont
       need to explicitly call it unless we make changes in Effect's Texture,
       Duration, BlendFunc and/or MaxParticles. }
-
-    procedure LoadPEX(const AURL: String); overload; deprecated 'Use LoadEffect';
-    procedure LoadPEX(const AEffect: TCastle2DParticleEffect;
-        const AOwnEffect: Boolean = True); overload; deprecated 'Use LoadEffect';
-
     procedure RefreshEffect;
     procedure SetInstances(const V: TCastle2DParticleInstanceArray);
     function LocalBoundingBox: TBox3D; override;
@@ -401,7 +399,6 @@ begin
   FRenderProgram.AttachFragmentShader(FragmentShaderSource);
   FRenderProgram.Link;
 
-  // Map uniform
   glGenBuffers(1, @Self.VBOInstanced);
   glGenBuffers(2, @Self.VBOs);
   glGenVertexArrays(2, @Self.VAOs);
@@ -429,7 +426,6 @@ begin
   Self.Texture := 0;
   Self.FSecondsPassed := 0;
   Self.FPosition := Vector2(0, 0);
-  Self.FOwnEffect := False;
   Self.Scale := Vector3(1, -1, 1);
   SetLength(FInstances, 1);
   Self.FInstances[0].Translation := Vector2(0, 0);
@@ -441,8 +437,6 @@ end;
 
 destructor TCastle2DParticleEmitterGPU.Destroy;
 begin
-  if Self.FOwnEffect and Assigned(FEffect) then
-    FEffect.Free;
   inherited;
 end;
 
@@ -593,22 +587,15 @@ end;
 
 procedure TCastle2DParticleEmitterGPU.LoadEffect(const AURL: String);
 begin
-  if Self.FOwnEffect and Assigned(FEffect) then
-    FreeAndNil(FEffect);
-  FEffect := TCastle2DParticleEffect.Create;
+  FEffect := TCastle2DParticleEffect.Create(Self);
   FEffect.Load(AURL);
   FURL := AURL;
-  Self.FOwnEffect := True;
   RefreshEffect;
 end;
 
-procedure TCastle2DParticleEmitterGPU.LoadEffect(const AEffect: TCastle2DParticleEffect;
-    const AOwnEffect: Boolean = True);
+procedure TCastle2DParticleEmitterGPU.LoadEffect(const AEffect: TCastle2DParticleEffect);
 begin
-  if Self.FOwnEffect and Assigned(FEffect) then
-    FreeAndNil(FEffect);
   FEffect := AEffect;
-  Self.FOwnEffect := AOwnEffect;
   RefreshEffect;
 end;
 
@@ -618,9 +605,9 @@ begin
 end;
 
 procedure TCastle2DParticleEmitterGPU.LoadPEX(const AEffect: TCastle2DParticleEffect;
-    const AOwnEffect: Boolean = True);
+  const AOwnEffect: Boolean = True);
 begin
-  Self.LoadEffect(AEffect, AOwnEffect);
+  Self.LoadEffect(AEffect);
 end;
 
 procedure TCastle2DParticleEmitterGPU.SetInstances(const V: TCastle2DParticleInstanceArray);

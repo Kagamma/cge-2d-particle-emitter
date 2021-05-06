@@ -45,7 +45,7 @@ type
   TCastle2DParticleBlendDict = TDictionary<Integer, String>;
 
   { This class acts as a place holder for effects. }
-  TCastle2DParticleEffect = class
+  TCastle2DParticleEffect = class(TComponent)
   public
     Texture: String;
     SourcePosition,
@@ -85,11 +85,7 @@ type
     RotationEnd,
     RotationEndVariance: Single;
     BBox: TBox3D;
-    constructor Create;
-    { Clone all attributes of this effect to another one. Good if we want to
-      load the effect from file just once and then apply it to other emitters
-      so all emitters have the same effect. }
-    procedure Clone(var ATarget: TCastle2DParticleEffect);
+    constructor Create(AOwner: TComponent); override;
     { Load particle attributes in .PEX format. }
     procedure Load(const AURL: String);
   end;
@@ -115,7 +111,6 @@ type
       all particles destroyed. }
     FReleaseWhenDone: Boolean;
     FPosition: TVector2;
-    FOwnEffect: Boolean;
 
     function EmitParticle: Boolean;
     procedure UpdateParticle(const P: PCastle2DParticle; ATimeStep: Single);
@@ -127,13 +122,12 @@ type
     { This method will free the current Effect if any, init a new FEffect and
       load settings from .PEX file. }
     procedure LoadEffect(const AURL: String); overload;
-    { If AOwnEffect = true the effect will be freed once emitter is freed. }
-    procedure LoadEffect(const AEffect: TCastle2DParticleEffect;
-        const AOwnEffect: Boolean = true); overload;
+    procedure LoadEffect(const AEffect: TCastle2DParticleEffect); overload;
 
     procedure LoadPEX(const AURL: String); overload; deprecated 'Use LoadEffect';
+    { AOwnEffect is ignored. }
     procedure LoadPEX(const AEffect: TCastle2DParticleEffect;
-        const AOwnEffect: Boolean = true); overload; deprecated 'Use LoadEffect';
+        const AOwnEffect: Boolean = true); overload; deprecated 'Use LoadEffect instead. AOwnEffect is ignored.';
 
     { Refresh the emitter according to the change from effect. Normally we dont
       need to explicitly call it unless we make changes in Effect's Texture,
@@ -173,53 +167,10 @@ begin
   Result := @FItems[APos];
 end;
 
-constructor TCastle2DParticleEffect.Create;
+constructor TCastle2DParticleEffect.Create(AOwner: TComponent);
 begin
   inherited;
   Self.BBox := TBox3D.Empty;
-end;
-
-procedure TCastle2DParticleEffect.Clone(var ATarget: TCastle2DParticleEffect);
-begin
-  if not Assigned(ATarget) then
-    ATarget := TCastle2DParticleEffect.Create;
-  ATarget.Texture := Texture;
-  ATarget.SourcePosition := SourcePosition;
-  ATarget.SourcePositionVariance := SourcePositionVariance;
-  ATarget.Speed := Speed;
-  ATarget.SpeedVariance := SpeedVariance;
-  ATarget.ParticleLifeSpan := ParticleLifeSpan;
-  ATarget.ParticleLifeSpanVariance := ParticleLifeSpanVariance;
-  ATarget.Angle := Angle;
-  ATarget.AngleVariance := AngleVariance;
-  ATarget.Gravity := Gravity;
-  ATarget.RadialAcceleration := RadialAcceleration;
-  ATarget.TangentialAcceleration := TangentialAcceleration;
-  ATarget.RadialAccelVariance := RadialAccelVariance;
-  ATarget.TangentialAccelVariance := TangentialAccelVariance;
-  ATarget.StartColor := StartColor;
-  ATarget.StartColorVariance := StartColorVariance;
-  ATarget.FinishColor := FinishColor;
-  ATarget.FinishColorVariance := FinishColorVariance;
-  ATarget.MaxParticles := MaxParticles;
-  ATarget.StartParticleSize := StartParticleSize;
-  ATarget.StartParticleSizeVariance := StartParticleSizeVariance;
-  ATarget.FinishParticleSize := FinishParticleSize;
-  ATarget.FinishParticleSizeVariance := FinishParticleSizeVariance;
-  ATarget.Duration := Duration;
-  ATarget.EmitterType := EmitterType;
-  ATarget.MaxRadius := MaxRadius;
-  ATarget.MaxRadiusVariance := MaxRadiusVariance;
-  ATarget.MinRadius := MinRadius;
-  ATarget.MinRadiusVariance := MinRadiusVariance;
-  ATarget.RotatePerSecond := RotatePerSecond;
-  ATarget.RotatePerSecondVariance := RotatePerSecondVariance;
-  ATarget.BlendFuncSource := BlendFuncSource;
-  ATarget.BlendFuncDestination := BlendFuncDestination;
-  ATarget.RotationStart := RotationStart;
-  ATarget.RotationStartVariance := RotationStartVariance;
-  ATarget.RotationEnd := RotationEnd;
-  ATarget.RotationEndVariance := RotationEndVariance;
 end;
 
 procedure TCastle2DParticleEffect.Load(const AURL: String);
@@ -376,37 +327,27 @@ begin
   FParticleList := TCastle2DParticleList.Create;
   FEmitParticleTime := 0;
   FReleaseWhenDone := false;
-  Self.FOwnEffect := False;
   Self.FPosition := Vector2(0, 0);
   Self.Scale := Vector3(1, -1, 1);
 end;
 
 destructor TCastle2DParticleEmitter.Destroy;
 begin
-  if Self.FOwnEffect and Assigned(FEffect) then
-    FEffect.Free;
   FParticleList.Free;
   inherited;
 end;
 
 procedure TCastle2DParticleEmitter.LoadEffect(const AURL: String);
 begin
-  if Self.FOwnEffect and Assigned(FEffect) then
-    FreeAndNil(FEffect);
-  FEffect := TCastle2DParticleEffect.Create;
+  FEffect := TCastle2DParticleEffect.Create(Self);
   FEffect.Load(AURL);
   FURL := AURL;
-  Self.FOwnEffect := True;
   RefreshEffect;
 end;
 
-procedure TCastle2DParticleEmitter.LoadEffect(const AEffect: TCastle2DParticleEffect;
-    const AOwnEffect: Boolean = True);
+procedure TCastle2DParticleEmitter.LoadEffect(const AEffect: TCastle2DParticleEffect);
 begin
-  if Self.FOwnEffect and Assigned(FEffect) then
-    FreeAndNil(FEffect);
   FEffect := AEffect;
-  Self.FOwnEffect := AOwnEffect;
   RefreshEffect;
 end;
 
@@ -418,7 +359,7 @@ end;
 procedure TCastle2DParticleEmitter.LoadPEX(const AEffect: TCastle2DParticleEffect;
     const AOwnEffect: Boolean = true);
 begin
-  Self.LoadEffect(AEffect, AOwnEffect);
+  Self.LoadEffect(AEffect);
 end;
 
 function TCastle2DParticleEmitter.EmitParticle: Boolean;
