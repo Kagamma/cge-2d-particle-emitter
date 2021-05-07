@@ -119,8 +119,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure Update(const SecondsPassed: Single; var RemoveMe: TRemoveType); override;
-    { This method will free the current Effect if any, init a new FEffect and
-      load settings from .PEX file. }
+    { Init a new FEffect and load settings from .PEX file. }
     procedure LoadEffect(const AURL: String); overload;
     procedure LoadEffect(const AEffect: TCastle2DParticleEffect); overload;
 
