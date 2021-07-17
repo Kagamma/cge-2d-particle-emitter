@@ -458,18 +458,27 @@ begin
     if (FEmissionTime > 0) or (FEmissionTime = -1) then
     begin
       if FEmissionTime > 0 then
-        FEmissionTime := Max(0, FEmissionTime - SecondsPassed);
+        if Self.TimePlaying then
+          FEmissionTime := Max(0, FEmissionTime - SecondsPassed * Self.TimePlayingSpeed)
+        else
+          FEmissionTime := Max(0, FEmissionTime - SecondsPassed);
     end;
 
     if not Self.FStartEmitting then
     begin
-      Self.FCountdownTillRemove := Self.FCountdownTillRemove - SecondsPassed;
+      if Self.TimePlaying then
+        Self.FCountdownTillRemove := Self.FCountdownTillRemove - SecondsPassed * Self.TimePlayingSpeed
+      else
+        Self.FCountdownTillRemove := Self.FCountdownTillRemove - SecondsPassed;
     end;
 
       // Update particles
     glEnable(GL_RASTERIZER_DISCARD);
     Self.FTransformFeedbackProgram.Enable;
-    Self.FTransformFeedbackProgram.Uniform('deltaTime').SetValue(Self.FSecondsPassed);
+    if Self.TimePlaying then
+      Self.FTransformFeedbackProgram.Uniform('deltaTime').SetValue(Self.FSecondsPassed * Self.TimePlayingSpeed)
+    else
+      Self.FTransformFeedbackProgram.Uniform('deltaTime').SetValue(Self.FSecondsPassed);
     if Self.FStartEmitting then
       Self.FTransformFeedbackProgram.Uniform('emissionTime').SetValue(Self.FEmissionTime)
     else
@@ -524,7 +533,10 @@ begin
     if (Self.FEmissionTime = 0) then
     begin
       if not Self.FIsUpdated then
-        Self.FCountdownTillRemove := Self.FCountdownTillRemove - SecondsPassed;
+        if Self.TimePlaying then
+          Self.FCountdownTillRemove := Self.FCountdownTillRemove - SecondsPassed * Self.TimePlayingSpeed
+        else
+          Self.FCountdownTillRemove := Self.FCountdownTillRemove - SecondsPassed;
       if (Self.FCountdownTillRemove <= 0) then
       begin
         RemoveMe := rtRemoveAndFree;
