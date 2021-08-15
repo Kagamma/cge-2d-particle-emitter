@@ -736,7 +736,7 @@ function TCastle2DParticleEmitterGPU.LocalBoundingBox: TBox3D;
 var
   V: TVector3;
 begin
-  if GetExists then
+  if GetExists and (Self.FEffect <> nil) then
   begin
     if not Self.FEffect.BBox.IsEmpty then
     begin
